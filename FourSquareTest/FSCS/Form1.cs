@@ -6,22 +6,28 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Net;
+using System.IO;
 
 namespace FSCS
 {
     public partial class Form1 : Form
     {
+       
+
+
         public Form1 ()
         {
             InitializeComponent();
         }
 
+
         private void Form1_Load ( object sender, EventArgs e )
         {
-            var fsa = new FourSquareAPI();
-            var url = fsa.MakeRequest();
+            var fsa = new FourSquareAPI( "setting.txt" );
+            var text = fsa.SendRequest( "users/self" );
 
-            richTextBox1.Text = url;
+            richTextBox1.Text = text;
         }
     }
 
@@ -35,11 +41,49 @@ namespace FSCS
                 + clientID + "&response_type=code&redirect_uri="
                 + secretURI;
         static private String code = "M4DKOG4JGYSG1E1RLPOZKXV2QCYOOE3R13DVKEL0HQCHHSH0";
-        static private string accessToken = "TTI1DEVFLWZYZZLXGHVRGMVLVD3JUREKQ5UTK5HKJZ2RYGT1";
+        static private string accessToken = "";
+
+        static String apiURI = "https://api.foursquare.com/v2/";
+
+
+        public String ReadSettings ( String filename )
+        {
+            var reader = new StreamReader( filename );
+
+            var token = reader.ReadLine();
+
+            reader.Close();
+
+            return token;
+        }
+
+        public FourSquareAPI( String filename )
+        {
+            accessToken = ReadSettings( filename );
+        }
+
 
         public String GetAuthURL()
         {
             return authURL;
+        }
+
+        public String SendRequest( String req )
+        {
+            String reqStr = apiURI + req + "?oauth_token=" + accessToken;
+
+            var client = new WebClient();
+            var stream = client.OpenRead( reqStr );
+
+            var sr = new StreamReader( stream, Encoding.GetEncoding( "UTF-8" ) );
+
+            String result = "";
+
+            while( !sr.EndOfStream )
+            {
+                result += sr.ReadLine();
+            }
+            return result;
         }
 
         public String MakeRequest()
@@ -52,7 +96,6 @@ namespace FSCS
             + "&code=" + code;
 
             return request;
-
         }
 
 
