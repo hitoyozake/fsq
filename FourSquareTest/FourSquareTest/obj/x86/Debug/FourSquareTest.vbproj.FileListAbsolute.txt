@@ -1,0 +1,11 @@
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FourSquareTest\bin\Debug\FourSquareTest.exe
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FourSquareTest\bin\Debug\FourSquareTest.pdb
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FourSquareTest\bin\Debug\FourSquareTest.xml
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FourSquareTest\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FourSquareTest\obj\x86\Debug\FourSquareTest.Form1.resources
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FourSquareTest\obj\x86\Debug\FourSquareTest.Resources.resources
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FourSquareTest\obj\x86\Debug\GenerateResource.read.1.tlog
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FourSquareTest\obj\x86\Debug\GenerateResource.write.1.tlog
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FourSquareTest\obj\x86\Debug\FourSquareTest.exe
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FourSquareTest\obj\x86\Debug\FourSquareTest.xml
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FourSquareTest\obj\x86\Debug\FourSquareTest.pdb

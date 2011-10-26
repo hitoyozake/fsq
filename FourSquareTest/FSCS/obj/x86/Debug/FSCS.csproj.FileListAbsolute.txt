@@ -1,0 +1,9 @@
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FSCS\bin\Debug\FSCS.exe
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FSCS\bin\Debug\FSCS.pdb
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FSCS\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FSCS\obj\x86\Debug\FSCS.Form1.resources
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FSCS\obj\x86\Debug\FSCS.Properties.Resources.resources
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FSCS\obj\x86\Debug\GenerateResource.read.1.tlog
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FSCS\obj\x86\Debug\GenerateResource.write.1.tlog
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FSCS\obj\x86\Debug\FSCS.exe
+C:\Users\QWERTY\Documents\Visual Studio 2010\Projects\FourSquareTest\FSCS\obj\x86\Debug\FSCS.pdb
