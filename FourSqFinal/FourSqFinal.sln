@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FourSqFinal", "FourSqFinal\FourSqFinal.vcxproj", "{3280BC47-E391-4CA4-B570-6996F96A2F47}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JSONReader", "JSONReader\JSONReader.vcxproj", "{7560BBF2-AC10-4878-8316-31F2DE7FDA0C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3280BC47-E391-4CA4-B570-6996F96A2F47}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3280BC47-E391-4CA4-B570-6996F96A2F47}.Debug|Win32.Build.0 = Debug|Win32
+		{3280BC47-E391-4CA4-B570-6996F96A2F47}.Release|Win32.ActiveCfg = Release|Win32
+		{3280BC47-E391-4CA4-B570-6996F96A2F47}.Release|Win32.Build.0 = Release|Win32
+		{7560BBF2-AC10-4878-8316-31F2DE7FDA0C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7560BBF2-AC10-4878-8316-31F2DE7FDA0C}.Debug|Win32.Build.0 = Debug|Win32
+		{7560BBF2-AC10-4878-8316-31F2DE7FDA0C}.Release|Win32.ActiveCfg = Release|Win32
+		{7560BBF2-AC10-4878-8316-31F2DE7FDA0C}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
