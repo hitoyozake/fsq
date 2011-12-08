@@ -1,10 +1,11 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <map>
+
 #include <boost/asio.hpp>
 #include <boost/optional.hpp>
 #include <boost/algorithm/string/replace.hpp>
-
 
 #include <boost/asio/ssl.hpp>
 
@@ -18,7 +19,6 @@ namespace search
 {
 	boost::optional< std::string > search_ssl( const std::string & url )
 	{
-
 		try
 		{
 			const auto index = url.find( "/" );
