@@ -26,3 +26,9 @@ C:\Users\QWERTY\Documents\My Dropbox\Public\FourSquareTest\FSCS\obj\x86\Debug\FS
 C:\Users\QWERTY\Documents\My Dropbox\Public\FourSquareTest\FSCS\obj\x86\Debug\FSCS.csproj.GenerateResource.Cache
 C:\Users\QWERTY\Documents\git\fsq\FourSquareTest\FSCS\obj\x86\Debug\FSCS.exe
 C:\Users\QWERTY\Documents\git\fsq\FourSquareTest\FSCS\obj\x86\Debug\FSCS.pdb
+C:\Users\QWERTY\Documents\git\fsq\FourSquareTest\FSCS\bin\Debug\FSCS.exe
+C:\Users\QWERTY\Documents\git\fsq\FourSquareTest\FSCS\bin\Debug\FSCS.pdb
+C:\Users\QWERTY\Documents\git\fsq\FourSquareTest\FSCS\obj\x86\Debug\FSCS.csprojResolveAssemblyReference.cache
+C:\Users\QWERTY\Documents\git\fsq\FourSquareTest\FSCS\obj\x86\Debug\FSCS.Form1.resources
+C:\Users\QWERTY\Documents\git\fsq\FourSquareTest\FSCS\obj\x86\Debug\FSCS.Properties.Resources.resources
+C:\Users\QWERTY\Documents\git\fsq\FourSquareTest\FSCS\obj\x86\Debug\FSCS.csproj.GenerateResource.Cache
