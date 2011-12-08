@@ -1,80 +1,70 @@
-#include <string>
+#include "string_map.h"
+#include <array>
 #include <map>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/progress.hpp>
+#include <boost/functional/hash.hpp>
 
 namespace map
 {
-	// stx is not my own code.
-	// reference : http://www.s34.co.jp/cpptechdoc/misc/stx-basic_symbol/
-	namespace stx {
-
-		template<class Key, class Comp =std::less<Key> >
-		class basic_symbol {
-		public:
-			typedef unsigned long	hash_type;
-			typedef Key	key_type;
-
-			basic_symbol()
-			{ k = & ( * key_pool().insert( key_type() ).first ); }
-			basic_symbol( const key_type& key )
-			{ k = & ( * key_pool().insert( key ).first ); }
-			basic_symbol( const basic_symbol & sym )
-				: k( sym.k ) {}
-
-			basic_symbol& operator=( const basic_symbol & sym )
-			{ k = sym.k; return *this; }
-			basic_symbol & operator=( const key_type & key )
-			{ k = & ( * key_pool().insert( key ).first); return * this; }
-
-			const key_type& key() const  { return *k; }
-			hash_type hash() const       { return hash_type(k); }
-
-		private:
-			typedef std::set<key_type, Comp> pool_allocator;
-			static pool_allocator& key_pool();
-			const key_type* k;
-
-		};
-
-		template<class Key, class Comp>
-		basic_symbol<Key,Comp>::pool_allocator&
-			basic_symbol<Key,Comp>::key_pool() {
-				static pool_allocator pool;
-				return pool;
+	template< std::size_t SIZE >
+	void init( std::array< std::string, SIZE > & str_table, std::array< stx::string_symbol, SIZE > & table ) {
+		std::string key;
+		for ( int i = 0; i < SIZE; ++i )
+		{
+			const std::string buf = "string string 日本語:" + boost::lexical_cast< std::string >( i );  
+			str_table[ i ] = buf;
+			table[ i ] = stx::string_symbol( buf );
 		}
-
-		template<class K, class C>
-		inline bool operator==(const basic_symbol<K,C>& x, const basic_symbol<K,C>& y)
-		{ return x.hash() == y.hash(); }
-
-		template<class K, class C>
-		inline bool operator!=(const basic_symbol<K,C>& x, const basic_symbol<K,C>& y)
-		{ return x.hash() != y.hash(); }
-
-		template<class K, class C>
-		inline bool operator<(const basic_symbol<K,C>& x, const basic_symbol<K,C>& y)
-		{ return x.hash() < y.hash(); }
-
-		template<class K, class C>
-		inline bool operator<=(const basic_symbol<K,C>& x, const basic_symbol<K,C>& y)
-		{ return x.hash() <= y.hash(); }
-
-		template<class K, class C>
-		inline bool operator>(const basic_symbol<K,C>& x, const basic_symbol<K,C>& y)
-		{ return x.hash() > y.hash(); }
-
-		template<class K, class C>
-		inline bool operator>=(const basic_symbol<K,C>& x, const basic_symbol<K,C>& y)
-		{ return x.hash() >= y.hash(); }
-
-		typedef basic_symbol<std::string>  string_symbol;
-		typedef basic_symbol<std::wstring> wstring_symbol;
-
 	}
+
+	template<class Container, class T, std::size_t SIZE >
+	void trial(Container & container, const T & table, int repeat ) {
+
+		boost::progress_timer t;
+		// table[0..N-1]をcontainerに挿入する。
+		for ( int i = 0; i < SIZE; ++i )
+			container[ table[ i ] ] = boost::lexical_cast< std::string>( i );
+
+		// table[0..N-1]をcontainerから検索し、その処理時間を求める。
+
+		while ( repeat-- )
+		{
+			for ( int i = 0; i < SIZE; ++i )
+			{
+				std::cout << container.find( table[ i ] ) << std::endl;
+			}
+		}
+	}
+
+
+	void test( std::unordered_map< stx::string_symbol, std::string > hoge )
+	{
+		//hoge[ (stx::string_symbol)"abc" ] = "cd";
+		//hoge.find( (stx::string_symbol)"abc" );
+	}
+
+
 
 	void map_test()
 	{
-		std::map< std::string, std::string > map;
-		map.insert( std::map< std::string, std::string>::value_type( "hoge", "foo" ) );
+		std::unordered_map< stx::string_symbol, std::string, stx::hash< stx::string_symbol> > symmap;
+		std::map< std::string, std::string > strmap;
 
+		const int size = 25000;
+		std::array< std::string, size >  str_table;
+		std::array< stx::string_symbol, size >  stx_table;
+
+		init( str_table, stx_table );
+
+		trial< decltype( symmap ), decltype( stx_table ), size >( symmap, stx_table, 100 );
+		trial< decltype( strmap ), decltype( str_table ), size >( strmap, str_table, 100 );
 	}
+}
+
+int main()
+{
+	map::map_test();
+	return 0;
 }

@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FourSqFinal", "FourSqFinal\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JSONReader", "JSONReader\JSONReader.vcxproj", "{7560BBF2-AC10-4878-8316-31F2DE7FDA0C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "string_map", "string_map\string_map.vcxproj", "{FA0D8648-25E4-43FF-8BC2-38C829092537}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +21,10 @@ Global
 		{7560BBF2-AC10-4878-8316-31F2DE7FDA0C}.Debug|Win32.Build.0 = Debug|Win32
 		{7560BBF2-AC10-4878-8316-31F2DE7FDA0C}.Release|Win32.ActiveCfg = Release|Win32
 		{7560BBF2-AC10-4878-8316-31F2DE7FDA0C}.Release|Win32.Build.0 = Release|Win32
+		{FA0D8648-25E4-43FF-8BC2-38C829092537}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FA0D8648-25E4-43FF-8BC2-38C829092537}.Debug|Win32.Build.0 = Debug|Win32
+		{FA0D8648-25E4-43FF-8BC2-38C829092537}.Release|Win32.ActiveCfg = Release|Win32
+		{FA0D8648-25E4-43FF-8BC2-38C829092537}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

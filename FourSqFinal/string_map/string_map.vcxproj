@@ -11,9 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{3280BC47-E391-4CA4-B570-6996F96A2F47}</ProjectGuid>
+    <ProjectGuid>{FA0D8648-25E4-43FF-8BC2-38C829092537}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>FourSqFinal</RootNamespace>
+    <RootNamespace>string_map</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -74,7 +74,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="fourSquareSearch.cpp" />
+    <ClCompile Include="..\FourSqFinal\string_map.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\FourSqFinal\string_map.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
