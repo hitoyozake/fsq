@@ -1,0 +1,20 @@
+json‚ÌŒ`Ž®
+
+username
+{
+	0
+	{
+		date : {}
+		0 : { 
+			time : "hh.mm.ss", 
+			venues : 
+			{  
+				...
+			} 
+		}
+		.
+		.
+		.
+	}
+	
+}

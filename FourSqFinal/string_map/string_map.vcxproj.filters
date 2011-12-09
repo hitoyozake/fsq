@@ -15,12 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\FourSqFinal\string_map.cpp">
+    <ClCompile Include="string_map.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="basic_string_hash.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\FourSqFinal\string_map.h">
+    <ClInclude Include="string_map.h">
       <Filter>ソース ファイル</Filter>
     </ClInclude>
   </ItemGroup>
