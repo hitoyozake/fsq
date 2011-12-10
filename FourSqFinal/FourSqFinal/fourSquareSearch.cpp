@@ -25,7 +25,7 @@ namespace search
 {
 	std::map< std::string, std::string > mp;
 	std::string key;
-	boost::optional< std::string > search_ssl( const std::string & url, boost::property_tree::ptree & log )
+	boost::optional< std::string > search_ssl( const std::string & url )
 	{
 		try
 		{
@@ -89,26 +89,16 @@ namespace search
 				boost::algorithm::replace_all( tmp_str, "\t", "" );
 				boost::algorithm::replace_all( tmp_str, " ", "" );
 				boost::algorithm::replace_all( tmp_str, "\\", "" );//エスケープ文字削除
+				
 
 				tmp_str.pop_back();
-				//tmp_str.pop_back();
 
 				//tmp_str = tmp_str.substr( 1 );
 
-				boost::property_tree::ptree p;
-
-				std::stringstream s;
-				s << tmp_str;
-
-				std::cout << s.str();
-
-				std::cout << s << std::endl;
-
-				boost::property_tree::json_parser::read_json( s, p );
-
-				log.push_back( std::make_pair( "", p ) );
-
 				mp.insert( std::map< std::string, std::string >::value_type( key, tmp_str ) );
+
+				return boost::optional< std::string >( tmp_str );
+
 			}
 			return boost::optional< std::string >();
 		}
@@ -172,7 +162,7 @@ void search_main()
 	using namespace boost::property_tree;
 
 	boost::io::ios_rdbuf_saver saver( std::cout );
-
+	std::string output;
 	std::ifstream ifs( "input.txt" );
 
 	enum STATE
@@ -187,13 +177,6 @@ void search_main()
 	};
 
 	int state = E_SEARCH_START;
-
-	wptree json;
-	ptree users;
-	ptree days;
-	ptree logs;
-	ptree user;
-	ptree day;
 
 
 
@@ -210,11 +193,7 @@ void search_main()
 			if( str.find( "start" ) == 0 )
 			{
 				state = E_SEARCH_USER_NAME;
-				user = ptree();
-				days = ptree();
-				day = ptree();
-				logs = ptree();
-
+				output += "{\n";
 				continue;
 			}
 		}
@@ -222,7 +201,7 @@ void search_main()
 		if( state == E_SEARCH_USER_NAME )
 		{
 			//ユーザ名を記録
-			user.put( "user", str );
+			output += "\"user\":\"" + str + "\",\n";
 			state = E_SEARCH_FIRST_DATE;
 			continue;
 		}
@@ -231,8 +210,10 @@ void search_main()
 		{
 			if( str.find("d") == 0 )
 			{
-				//日付だった
-				day.put( "day", str.substr( 1 ) );
+				//初めて見つけた日付だった
+				output += "\"days\" : \n\t\t[\n";
+				output += ( std::string )"\t\t\t{\n" + "\t\t\t\t\"day\":\"" + str.substr( 1 ) + "\",";
+				output += "\n\t\t\t\t\"log\":[\n\t\t\t\t\t\n";
 				state = E_SEARCH_DATA_OR_DATE_OR_END;
 				continue;
 			}
@@ -242,11 +223,13 @@ void search_main()
 		{
 			if( str.find("d") == 0 )
 			{
+				output.pop_back();
+				output.pop_back();
 				//日付だった
-				day.add_child( "logs", logs );
-				days.push_back( std::make_pair( "", day ) );
-				day = ptree();
-				day.put( "day", str.substr( 1 ) );
+				output += "\n\t\n]\n},\n";//ログの終わり
+				output += ( std::string )"\t\t\t{\n" + "\"day\":\"" + str.substr( 1 ) + "\",";
+				output += "\n\t\t\t\t\"log\":[\n\t\t\t\t\t\n";
+				
 				continue;
 			}
 
@@ -266,7 +249,6 @@ void search_main()
 						//見つかった
 						ptree log;
 						log.put( "info", itr->second );
-						logs.push_back( std::make_pair( "", log ) );
 						continue;
 					}
 				}
@@ -294,14 +276,16 @@ void search_main()
 							//リダイレクト処理
 							if( fsq->find( "href=\"https://foursquare" ) != std::string::npos )
 							{
-								ptree log;
 								const auto hrefsub = fsq->substr( fsq->find( "href=\"https://foursquare" ) );
 								const auto href_index = fsq->find( "\">" );
 								const auto len = hrefsub.find( "\">" );
 								const auto url_fsq = hrefsub.substr( 14, len - 14 );
-								search_ssl( url_fsq, log );
-
-								logs.push_back( std::make_pair( "", log ) );	
+								search_ssl( url_fsq );
+								if( const auto s = search_ssl( url_fsq ) )
+								{
+									output += ( std::string )"{ \"time\":" + "\"0\"" + ",\n \"info\":[";
+									output += s.get() + "]},\n";
+								}
 							}
 						}
 					}
@@ -323,28 +307,35 @@ void search_main()
 							const auto href_index = fsq->find( "\">" );
 							const auto len = hrefsub.find( "\">" );
 							const auto url_fsq = hrefsub.substr( 14, len - 14 );
-							search_ssl( url_fsq, log );
-							logs.push_back( std::make_pair( "", log ) );					
+							if( const auto s = search_ssl( url_fsq ) )
+							{
 
+								output += ( std::string )"{ \"time\":" + "\"0\"" + ",\n \"info\":[";
+								output += s.get() + "]},\n";
+							}
 						}
 					}
-
 					continue;
 				}
 			}
-
 		}
 		if( str.find( "end" ) == 0 )
 		{
-			user.add_child( "day", days );
-			users.push_back( std::make_pair( "", user ) );
+			//前はログ
+			output.pop_back();
+			output.pop_back();
+			output += "\n]\n} \n]\n},\n";
 
 			state = E_END;
 			continue;
 		}
 	}
-	json.add_child( L"users", users );
-	write_json( "output.json", json );
+
+	output.pop_back();
+	output.pop_back();
+	std::ofstream ofs( "output.txt" );
+	ofs << output;
+
 }
 
 

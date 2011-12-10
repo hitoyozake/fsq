@@ -53,7 +53,7 @@ void writer()
 int main()
 {
 	
-	writer();
+	//writer();
 	reader();
 	return 0;
 }
