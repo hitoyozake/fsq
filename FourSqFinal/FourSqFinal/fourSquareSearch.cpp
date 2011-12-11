@@ -2,7 +2,6 @@
 #include <string>
 #include <fstream>
 #include <map>
-#include <codecvt>
 
 #include <boost/asio.hpp>
 #include <boost/optional.hpp>
@@ -90,6 +89,24 @@ namespace search
 				boost::algorithm::replace_all( tmp_str, " ", "" );
 				boost::algorithm::replace_all( tmp_str, "\\", "" );//エスケープ文字削除
 				
+				//nameの中に " " があったら、それは置換
+				const auto namefind = tmp_str.find( "\"name\":" );
+
+				//nameの中の "" を除去
+				if( namefind != std::string::npos )
+				{
+					const auto contactfind = tmp_str.find( ",\"contact\":" );
+
+					if( contactfind != std::string::npos )
+					{
+						auto namestr = tmp_str.substr( namefind + 9, contactfind - namefind - 12 ); 
+
+						boost::algorithm::replace_all( namestr, "\"", "" );
+
+						tmp_str = tmp_str.substr( 0, namefind + 9 ) + namestr + \
+							tmp_str.substr( contactfind - 3 ); 
+					}
+				}
 
 				tmp_str.pop_back();
 
@@ -164,6 +181,7 @@ void search_main()
 	boost::io::ios_rdbuf_saver saver( std::cout );
 	std::string output;
 	std::ifstream ifs( "input.txt" );
+	int counter = 0;
 
 	enum STATE
 	{
@@ -178,10 +196,12 @@ void search_main()
 
 	int state = E_SEARCH_START;
 
-
+	output += "{\n\"data\": [\n";
 
 	while( ! ifs.eof() )
 	{
+		std::cout << ++counter << std::endl;
+
 		std::string str;
 
 		std::getline( ifs, str );
@@ -238,17 +258,20 @@ void search_main()
 				//key検索
 				const auto imatf = str.find("http://" );
 
-				const auto imat = str.substr( imatf );
+				const auto imat = str.substr( 0, imatf );
+				std::cout << "searching : " << imat << std::endl;
 
 				if( imatf != std::string::npos )
 				{
-					const auto itr = mp.find( imat );
+					const auto itr = mp.find(  imat );
 
 					if( itr != mp.end() )
 					{
+						const auto time = str.substr( str.find( "{" ) + 1, 8 ); 
+						output += ( std::string )"{ \"time\":" + "\"" + time + "\"" + ",\n \"info\":[";
+						output += itr->second + "]},\n";
 						//見つかった
-						ptree log;
-						log.put( "info", itr->second );
+						std::cout << "hit" << std::endl;		
 						continue;
 					}
 				}
@@ -283,7 +306,8 @@ void search_main()
 								search_ssl( url_fsq );
 								if( const auto s = search_ssl( url_fsq ) )
 								{
-									output += ( std::string )"{ \"time\":" + "\"0\"" + ",\n \"info\":[";
+									const auto time = str.substr( str.find( "{" )+ 1, 8 ); 
+									output += ( std::string )"{ \"time\":" + "\"" + time + "\"" + ",\n \"info\":[";
 									output += s.get() + "]},\n";
 								}
 							}
@@ -309,8 +333,8 @@ void search_main()
 							const auto url_fsq = hrefsub.substr( 14, len - 14 );
 							if( const auto s = search_ssl( url_fsq ) )
 							{
-
-								output += ( std::string )"{ \"time\":" + "\"0\"" + ",\n \"info\":[";
+								const auto time = str.substr( str.find( "{" )+ 1, 8 ); 
+								output += ( std::string )"{ \"time\":" + "\"" + time + "\"" + ",\n \"info\":[";
 								output += s.get() + "]},\n";
 							}
 						}
@@ -333,6 +357,8 @@ void search_main()
 
 	output.pop_back();
 	output.pop_back();
+
+	output += "\n]\n}\n";
 	std::ofstream ofs( "output.txt" );
 	ofs << output;
 
