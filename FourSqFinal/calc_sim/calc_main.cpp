@@ -52,13 +52,23 @@ double calc( const std::vector< double > & k, const std::vector< double > & l )
 
 //cityの記憶
 //cityが同じ且つ複数日でまたいで記録していた場合は地元
-
-
-
 //行動範囲に基づく類似度計算
-void place()
+boost::optional< std::vector< int > > get_time( const std::vector< int > & times )
 {
+	std::vector< int > result;
 
+	if( times.size() <= 1 )
+		return boost::optional< std::vector< int > >();
+
+	//各観光地の、各属性(博物館他)の行動時間の平均をとっておくのもありかも
+	//行動範囲が広い == 周る時間が短くて、多数の属性を得ている?
+
+	for( std::size_t i = 0, size = times.size(); i < size - 1; ++i )
+	{
+		result.push_back( times[ i ] - times[ i + 1 ] );
+	}
+
+	return boost::optional< std::vector< int > >( result );
 }
 
 
