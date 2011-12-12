@@ -1,12 +1,15 @@
 #include <iostream>
 #include <math.h>
 #include <fstream>
+#include <numeric>
 #include <vector>
 #include <array>
+#include <map>
 #include <time.h>
 
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
+
 
 #define DEBUGMODE_FLAG 0
 
@@ -17,6 +20,59 @@ enum enum_elements
 	E_ELEM_FOOD,
 	E_MAX,
 };
+
+class database
+{
+public:
+	typedef unsigned int day;
+	typedef unsigned int time;
+
+	unsigned int value( const std::string & category ) const
+	{
+		const auto ptr = category_.find( category );
+
+		if( ptr != category_.end() )
+			return ptr->second;
+		else
+			return 0;
+	}
+
+	unsigned int sum() const
+	{
+		return static_cast< unsigned >\
+			( std::accumulate( category_.begin(), category_.end(), 0, \
+			[]( const decltype( category_.begin() ) & v, const unsigned int value )
+			{
+				return v->second + value;
+			}
+		) );
+	}
+
+
+	void add( const std::string & category, const time time_value, const day day_value )
+	{
+		const auto it = history_.find( category );
+
+		const unsigned int border = 3;
+
+		if( it == history_.end() || \
+			abs( static_cast< long >( it->second - day_value ) ) < border )
+			category_[ category ] += time_value;
+	}
+
+	void sub( const std::string & category, const unsigned int value )
+	{
+		category_[ category ] -= value;
+	}
+
+
+private:
+	std::map< std::string, time > category_;
+	std::map< std::string, day > history_; 
+	//追加されて無かったら、value = 0として返す
+};
+
+
 
 //< shpp, station, entertainment, .... >
 //属性ごとの訪問回数(ただし全体の言った数で割った値 = 割合
@@ -62,6 +118,8 @@ boost::optional< std::vector< int > > get_time( const std::vector< int > & times
 
 	//各観光地の、各属性(博物館他)の行動時間の平均をとっておくのもありかも
 	//行動範囲が広い == 周る時間が短くて、多数の属性を得ている?
+
+	//マルコフ連鎖的なものを求めていないので順番は見ない
 
 	for( std::size_t i = 0, size = times.size(); i < size - 1; ++i )
 	{
