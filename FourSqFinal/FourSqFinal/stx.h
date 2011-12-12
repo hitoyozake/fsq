@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
+#include <map>
+#include <set>
 
 namespace string_map
 {
@@ -37,9 +37,9 @@ namespace string_map
 			const key_type * k;
 		};
 
-		template<class Key, class Comp>
-		basic_symbol<Key,Comp>::pool_allocator&
-			basic_symbol<Key,Comp>::key_pool() {
+		template< class Key, class Comp >
+		typename basic_symbol< Key, Comp >::pool_allocator&
+			basic_symbol< Key, Comp >::key_pool() {
 				static pool_allocator pool;
 				return pool;
 		}

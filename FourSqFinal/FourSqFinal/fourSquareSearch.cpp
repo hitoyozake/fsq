@@ -14,6 +14,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+#include "stx.h"
+
 //icuuc
 #include <Windows.h>
 
@@ -22,7 +24,7 @@
 
 namespace search
 {
-	std::map< std::string, std::string > mp;
+	std::map< string_map::stx::string_symbol, std::string > mp;
 	std::string key;
 	boost::optional< std::string > search_ssl( const std::string & url )
 	{

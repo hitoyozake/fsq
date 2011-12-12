@@ -76,6 +76,9 @@
   <ItemGroup>
     <ClCompile Include="fourSquareSearch.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stx.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

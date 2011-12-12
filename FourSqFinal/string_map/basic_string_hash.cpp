@@ -25,7 +25,6 @@ namespace basic_string_hash
 			return * this;
 		}
 
-
 		basic_string_hash()
 			: k_ ( & ( * key_pool_.insert( std::string() ).first ) )
 
