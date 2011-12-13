@@ -10,7 +10,6 @@
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
 
-
 #define DEBUGMODE_FLAG 0
 
 enum enum_elements
@@ -41,9 +40,9 @@ public:
 	{
 		return static_cast< unsigned >\
 			( std::accumulate( category_.begin(), category_.end(), 0, \
-			[]( const decltype( category_.begin() ) & v, const unsigned int value )
+			[]( const unsigned int value, const std::pair< const std::string, time > & v )
 			{
-				return v->second + value;
+				return  v.second + value;
 			}
 		) );
 	}
@@ -51,6 +50,14 @@ public:
 
 	void add( const std::string & category, const time time_value, const day day_value )
 	{
+		{
+			const auto it = std::find( black_list_.begin(), black_list_.end(), category );
+
+			if( it != black_list_.end() )
+				return;
+		}
+
+
 		const auto it = history_.find( category );
 
 		const unsigned int border = 3;
@@ -58,6 +65,10 @@ public:
 		if( it == history_.end() || \
 			abs( static_cast< long >( it->second - day_value ) ) < border )
 			category_[ category ] += time_value;
+		else
+		{
+			black_list_.push_back( category );
+		}
 	}
 
 	void sub( const std::string & category, const unsigned int value )
@@ -65,11 +76,34 @@ public:
 		category_[ category ] -= value;
 	}
 
+	struct spot
+	{
+		std::string name_;
+		std::string category_;
+		std::string city_;
+		double latitude_;
+		double longitude_;
+
+		spot( const std::string & name, const std::string & category, const std::string & city, \
+			const double latitude, const double longitude ) : \
+			name_( name ), category_( category ), latitude_( latitude ), longitude_( longitude )
+		{}
+
+		spot(){}
+
+	};
 
 private:
 	std::map< std::string, time > category_;
-	std::map< std::string, day > history_; 
+	std::map< std::string, day > history_;
+	std::vector< std::string > black_list_;
 	//í«â¡Ç≥ÇÍÇƒñ≥Ç©Ç¡ÇΩÇÁÅAvalue = 0Ç∆ÇµÇƒï‘Ç∑
+};
+
+struct profile
+{
+	std::map< std::string, database > city_history_;
+	unsigned int id_;
 };
 
 
