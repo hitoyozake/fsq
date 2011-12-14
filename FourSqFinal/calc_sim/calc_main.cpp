@@ -153,7 +153,7 @@ struct profile
 //< 
 
 //R k,l (k,lƒ†[ƒU) = K * L / ( | K | * | L | )
-// = ƒ°i ( K i * L i ) ^ 2 / ( ( sqrt( ƒ°i( K i ) ^ 2 ) * ( sqrt( ƒ°i( L i ) ^ 3 ) ) 
+// = ƒ°i ( K i * L i ) ^ 2 / ( ( sqrt( ƒ°i( K i ) ^ 2 ) * ( sqrt( ƒ°i( L i ) ^ 2 ) ) 
 //R = ‘ŠŠÖŒW”
 double calc( const std::vector< double > & k, const std::vector< double > & l )
 {
