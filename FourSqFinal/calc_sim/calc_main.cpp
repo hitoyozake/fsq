@@ -20,6 +20,11 @@ enum enum_elements
 	E_MAX,
 };
 
+//その日のうちの最初と最後は知る必要があるので
+//dayという概念は必要
+
+
+#pragma region database
 class database
 {
 public:
@@ -57,7 +62,6 @@ public:
 				return;
 		}
 
-
 		const auto it = history_.find( category );
 
 		const unsigned int border = 3;
@@ -76,6 +80,18 @@ public:
 		category_[ category ] -= value;
 	}
 
+	
+	typedef std::string city;
+	typedef std::string state;
+
+	typedef std::pair< city, state > city_info;
+
+	//頻度計算用
+	std::map< city_info, std::vector< int > > info_;
+	
+	std::string local_;
+
+
 	struct spot
 	{
 		std::string name_;
@@ -93,12 +109,35 @@ public:
 
 	};
 
+	const std::vector< spot * > & get_all() const
+	{
+		return all_;
+	}
+
+	void search( const database & d )
+	{
+		std::vector< double > v, v2; 
+
+
+
+		for( auto it = all_map_.begin(), end = all_map_.end(); it != end; ++it )
+		{
+			all_map_[ it->first ];
+			v.push_back( it->second );
+			v2.push_back( d.all_map_.at( it->first ) );
+		}
+
+	}
+
 private:
+	std::vector< spot * > all_;
+	std::map< spot * const, int > all_map_;
 	std::map< std::string, time > category_;
 	std::map< std::string, day > history_;
 	std::vector< std::string > black_list_;
 	//追加されて無かったら、value = 0として返す
 };
+#pragma endregion
 
 struct profile
 {
