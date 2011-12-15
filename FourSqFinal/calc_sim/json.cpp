@@ -13,10 +13,10 @@ namespace json
 	{
 	public:
 		void read_file( const std::string & filename );
-		wptree pt() const{ return pt_; }
+		ptree pt() const{ return pt_; }
 
 	private:
-		wptree pt_;
+		ptree pt_;
 	};
 
 	struct data
@@ -33,23 +33,23 @@ namespace json
 
 		if( const auto data = pt.get_child_optional( "data" ) )
 		{
-			if( auto x = data->begin()->second.get_optional< std::wstring >( "user" ) )
+			if( auto x = data->begin()->second.get_optional< std::string >( "user" ) )
 				std::cout << x.get() << std::endl;
-			if( const auto days = pt.get_child_optional( "days" ) )
-			{/*
-				std::cout << "day : " << days->get< std::string >( "day" ) << std::endl;
+			if( const auto days = data->begin()->second.get_child_optional( "days" ) )
+			{
+				std::cout << "day : " << days->begin()->second.get< std::string >( "day" ) << std::endl;
 
-				if( const auto log = days->get_child_optional( "log" ) )
+				if( const auto log = days->begin()->second.get_child_optional( "log" ) )
 				{
-					std::cout << "time : " << log->get< std::string >( "time" ) << std::endl;
+					std::cout << "time : " << log->begin()->second.get< std::string >( "time" ) << std::endl;
 				}
-			*/}
+			}
 		}
 	}
 
 	void json_reader::read_file( const std::string & filename )
 	{
-		wptree pt;
+		ptree pt;
 		try
 		{
 			json_parser::read_json( filename, pt );
@@ -89,6 +89,7 @@ data.child
 	}
 }
 
+UTF-8 BOM–³‚µ
 */
 
 int main()
