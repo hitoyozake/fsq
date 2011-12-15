@@ -270,7 +270,8 @@ void search_main()
 					if( itr != mp.end() )
 					{
 						const auto str_for_time = str.substr( str.find( "http://" ) );
-						const auto time = str.substr( str_for_time.find( "{" ) + 1, 8 ); 
+						const auto time = str_for_time.substr( str_for_time.find( "{" ) + 1, 8 );
+						std::cout << time << std::endl;
 						output += ( std::string )"{ \"time\":" + "\"" + time + "\"" + ",\n \"info\":[";
 						output += itr->second + "]},\n";
 						//Œ©‚Â‚©‚Á‚½
@@ -310,7 +311,8 @@ void search_main()
 								if( const auto s = search_ssl( url_fsq ) )
 								{
 									const auto str_for_time = str.substr( str.find( "http://" ) );
-									const auto time = str.substr( str_for_time.find( "{" ) + 1, 8 ); 
+									const auto time = str_for_time.substr( str_for_time.find( "{" ) + 1, 8 ); 
+									std::cout << time << std::endl;
 									output += ( std::string )"{ \"time\":" + "\"" + time + "\"" + ",\n \"info\":[";
 									output += s.get() + "]},\n";
 								}
@@ -338,7 +340,9 @@ void search_main()
 							if( const auto s = search_ssl( url_fsq ) )
 							{
 								const auto str_for_time = str.substr( str.find( "http://" ) );
-								const auto time = str.substr( str_for_time.find( "{" ) + 1, 8 ); 
+								const auto time = str_for_time.substr( str_for_time.find( "{" ) + 1, 8 );
+								std::cout << time << std::endl;
+
 								output += ( std::string )"{ \"time\":" + "\"" + time + "\"" + ",\n \"info\":[";
 								output += s.get() + "]},\n";
 							}

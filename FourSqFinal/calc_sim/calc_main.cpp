@@ -30,67 +30,12 @@ class database
 public:
 	typedef unsigned int day;
 	typedef unsigned int time;
+	typedef unsigned int state;
 
-	unsigned int value( const std::string & category ) const
+	std::string spot()
 	{
-		const auto ptr = category_.find( category );
-
-		if( ptr != category_.end() )
-			return ptr->second;
-		else
-			return 0;
+		
 	}
-
-	unsigned int sum() const
-	{
-		return static_cast< unsigned >\
-			( std::accumulate( category_.begin(), category_.end(), 0, \
-			[]( const unsigned int value, const std::pair< const std::string, time > & v )
-			{
-				return  v.second + value;
-			}
-		) );
-	}
-
-
-	void add( const std::string & category, const time time_value, const day day_value )
-	{
-		{
-			const auto it = std::find( black_list_.begin(), black_list_.end(), category );
-
-			if( it != black_list_.end() )
-				return;
-		}
-
-		const auto it = history_.find( category );
-
-		const unsigned int border = 3;
-
-		if( it == history_.end() || \
-			abs( static_cast< long >( it->second - day_value ) ) < border )
-			category_[ category ] += time_value;
-		else
-		{
-			black_list_.push_back( category );
-		}
-	}
-
-	void sub( const std::string & category, const unsigned int value )
-	{
-		category_[ category ] -= value;
-	}
-
-	
-	typedef std::string city;
-	typedef std::string state;
-
-	typedef std::pair< city, state > city_info;
-
-	//頻度計算用
-	std::map< city_info, std::vector< int > > info_;
-	
-	std::string local_;
-
 
 	struct spot
 	{
@@ -108,28 +53,8 @@ public:
 		spot(){}
 
 	};
-
-	const std::vector< spot * > & get_all() const
-	{
-		return all_;
-	}
-
-	void search( const database & d )
-	{
-		std::vector< double > v, v2; 
-
-
-
-		for( auto it = all_map_.begin(), end = all_map_.end(); it != end; ++it )
-		{
-			all_map_[ it->first ];
-			v.push_back( it->second );
-			v2.push_back( d.all_map_.at( it->first ) );
-		}
-
-	}
-
 private:
+	std::map< state, int > counter_;
 	std::vector< spot * > all_;
 	std::map< spot * const, int > all_map_;
 	std::map< std::string, time > category_;
@@ -138,6 +63,9 @@ private:
 	//追加されて無かったら、value = 0として返す
 };
 #pragma endregion
+
+//同じstate/cityにおいて、何日間かけてつぶやいたか
+
 
 struct profile
 {
