@@ -13,10 +13,10 @@ namespace json
 	{
 	public:
 		void read_file( const std::string & filename );
-		ptree pt() const{ return pt_; }
+		wptree pt() const{ return pt_; }
 
 	private:
-		ptree pt_;
+		wptree pt_;
 	};
 
 	struct data
@@ -27,14 +27,29 @@ namespace json
 		int time_;
 	};
 
-	void get_data( const json_reader & jr )
+	void show_all( const json_reader & jr )
 	{
+		auto pt = jr.pt();
 
+		if( const auto data = pt.get_child_optional( "data" ) )
+		{
+			if( auto x = data->begin()->second.get_optional< std::wstring >( "user" ) )
+				std::cout << x.get() << std::endl;
+			if( const auto days = pt.get_child_optional( "days" ) )
+			{/*
+				std::cout << "day : " << days->get< std::string >( "day" ) << std::endl;
+
+				if( const auto log = days->get_child_optional( "log" ) )
+				{
+					std::cout << "time : " << log->get< std::string >( "time" ) << std::endl;
+				}
+			*/}
+		}
 	}
 
 	void json_reader::read_file( const std::string & filename )
 	{
-		ptree pt;
+		wptree pt;
 		try
 		{
 			json_parser::read_json( filename, pt );
@@ -56,16 +71,32 @@ data.child
 		-user
 		days.child
 			{
-				
+				-day
+				log.child
+				{
+					-time
+					info.child
+					{
+						-venue.location.lat
+						-venue.location.lng
+						-venue.city
+						-venue.state
+						-venue.categories.name ( shortName, puralName )
+					}
+				}
 			}
 		}
 	}
 }
 
-
-
-
-
-
 */
+
+int main()
+{
+	json::json_reader js;
+	js.read_file( "outputs.txt" );
+	show_all( js );
+
+	return 0;
+}
 

@@ -12,6 +12,8 @@
 
 #define DEBUGMODE_FLAG 0
 
+#if 0
+
 enum enum_elements
 {
 	E_ELEM_SHOP,
@@ -147,3 +149,5 @@ int main()
 
 	return 0;
 }
+
+#endif
