@@ -1,10 +1,12 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+
 
 namespace json
 {
@@ -30,6 +32,9 @@ namespace json
 
 	void show_all( const json_reader & jr )
 	{
+		std::vector< std::pair< std::string, \
+			std::vector< std::pair< std::string, std::vector< std::string > > > > > vector;
+
 		auto pt = jr.pt();
 
 		if( const auto data = pt.get_child_optional( "data" ) )
@@ -48,7 +53,7 @@ namespace json
 						if( const auto day = it2->second.get_optional< std::string >( "day" ) )
 						{
 							std::cout << "\tday : " << day.get() << std::endl;
-						}	
+						}
 
 						if( const auto log = it2->second.get_child_optional( "log" ) )
 						{
@@ -58,14 +63,12 @@ namespace json
 								{
 									std::cout << "\t\ttime : " << time.get() << std::endl;
 								}
-
 								if( const auto info = it3->second.get_child_optional( "info" ) )
 								{
 									for( auto it4 = info->begin(), end4 = info->end(); it4 != end4; ++it4 )
 									{
 										if( const auto city = it4->second.get_optional< std::string >( "venue.location.city" ) )
 										{
-											
 											std::cout << "\t\t\tcity : " << city.get() << std::endl;
 										}
 									}
