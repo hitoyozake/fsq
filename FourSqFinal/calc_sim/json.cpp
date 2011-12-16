@@ -27,23 +27,56 @@ namespace json
 		int time_;
 	};
 
+
 	void show_all( const json_reader & jr )
 	{
 		auto pt = jr.pt();
 
 		if( const auto data = pt.get_child_optional( "data" ) )
 		{
-			if( auto x = data->begin()->second.get_optional< std::string >( "user" ) )
-				std::cout << x.get() << std::endl;
-			if( const auto days = data->begin()->second.get_child_optional( "days" ) )
+			for( auto it = data->begin(), end = data->end(); it != end; ++it )
 			{
-				std::cout << "day : " << days->begin()->second.get< std::string >( "day" ) << std::endl;
-
-				if( const auto log = days->begin()->second.get_child_optional( "log" ) )
+				if( auto user = it->second.get_optional< std::string >( "user" ) )
 				{
-					std::cout << "time : " << log->begin()->second.get< std::string >( "time" ) << std::endl;
+					std::cout << user.get() << std::endl;
+				}
+
+				if( const auto days = it->second.get_child_optional( "days" ) )
+				{
+					for( auto it2 = days->begin(), end2 = days->end(); it2 != end2; ++it2 )
+					{
+						if( const auto day = it2->second.get_optional< std::string >( "day" ) )
+						{
+							std::cout << "\tday : " << day.get() << std::endl;
+						}	
+
+						if( const auto log = it2->second.get_child_optional( "log" ) )
+						{
+							for( auto it3 = log->begin(), end3 = log->end(); it3 != end3; ++it3 )
+							{
+								if( const auto time = it3->second.get_optional< std::string >( "time" ) )
+								{
+									std::cout << "\t\ttime : " << time.get() << std::endl;
+								}
+
+								if( const auto info = it3->second.get_child_optional( "info" ) )
+								{
+									for( auto it4 = info->begin(), end4 = info->end(); it4 != end4; ++it4 )
+									{
+										if( const auto city = it4->second.get_optional< std::string >( "venue.location.city" ) )
+										{
+											
+											std::cout << "\t\t\tcity : " << city.get() << std::endl;
+										}
+									}
+								}
+
+							}
+						}
+					}
 				}
 			}
+
 		}
 	}
 
@@ -64,7 +97,6 @@ namespace json
 }
 
 /*
-
 data.child
 
 	{
