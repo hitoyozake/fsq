@@ -76,7 +76,11 @@
   <ItemGroup>
     <ClCompile Include="calc_func.cpp" />
     <ClCompile Include="calc_main.cpp" />
+    <ClCompile Include="distance.cpp" />
     <ClCompile Include="json.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="distance.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

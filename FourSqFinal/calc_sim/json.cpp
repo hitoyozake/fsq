@@ -71,6 +71,12 @@ namespace json
 										{
 											std::cout << "\t\t\tcity : " << city.get() << std::endl;
 										}
+
+										if( const auto city = it4->second.get_optional< std::string >( "venue.location.name" ) )
+										{
+											std::cout << "\t\t\tname : " << city.get() << std::endl;
+										}
+
 									}
 								}
 
