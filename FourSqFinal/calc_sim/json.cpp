@@ -6,7 +6,7 @@
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
-
+#include <boost/lexical_cast.hpp>
 
 namespace json
 {
@@ -21,13 +21,36 @@ namespace json
 		ptree pt_;
 	};
 
-	struct data
+	struct personal
 	{
-		std::string city_name_;
-		std::string state_name_;
-		int day_;
-		int time_;
+		struct data
+		{
+			std::string city_name_;
+			std::string state_name_;
+			int day_;
+			int time_;
+			int elem_;
+		};
+
+		struct day
+		{
+			int day_;
+			std::vector< data > data_;
+		};
+		std::string name_;
+
+		std::vector< day > day_;
+		std::map< std::string, int > elem_count_;
+		std::vector< std::string > base_state_;//ínå≥
 	};
+
+	int get_element()
+	{
+		std::map< std::string, int > element_dectionary;
+		return 0;
+	}
+
+
 
 
 	void show_all( const json_reader & jr )
@@ -37,31 +60,42 @@ namespace json
 
 		auto pt = jr.pt();
 
+		std::vector< personal > people;
+
 		if( const auto data = pt.get_child_optional( "data" ) )
 		{
 			for( auto it = data->begin(), end = data->end(); it != end; ++it )
 			{
+				personal person;
+
 				if( auto user = it->second.get_optional< std::string >( "user" ) )
 				{
-					std::cout << user.get() << std::endl;
+					person.name_ = std::move( user.get() );
 				}
 
 				if( const auto days = it->second.get_child_optional( "days" ) )
 				{
 					for( auto it2 = days->begin(), end2 = days->end(); it2 != end2; ++it2 )
 					{
+						personal::day d;
 						if( const auto day = it2->second.get_optional< std::string >( "day" ) )
 						{
-							std::cout << "\tday : " << day.get() << std::endl;
+							d.day_ = boost::lexical_cast< int >( day.get().substr( 1 ) );
 						}
 
 						if( const auto log = it2->second.get_child_optional( "log" ) )
 						{
+
 							for( auto it3 = log->begin(), end3 = log->end(); it3 != end3; ++it3 )
 							{
+								personal::data data;
+								
 								if( const auto time = it3->second.get_optional< std::string >( "time" ) )
 								{
 									std::cout << "\t\ttime : " << time.get() << std::endl;
+									data.time_ = 60 * 60 * boost::lexical_cast< int >( time.get().substr( 0, 2 ) )\
+										+ 60 * boost::lexical_cast< int >( time.get().substr( 3, 2 ) ) \
+										+      boost::lexical_cast< int >( time.get().substr( 6, 2 ) );
 								}
 								if( const auto info = it3->second.get_child_optional( "info" ) )
 								{
@@ -69,17 +103,30 @@ namespace json
 									{
 										if( const auto city = it4->second.get_optional< std::string >( "venue.location.city" ) )
 										{
-											std::cout << "\t\t\tcity : " << city.get() << std::endl;
+											data.city_name_ = city.get();											
 										}
 
-										if( const auto city = it4->second.get_optional< std::string >( "venue.location.name" ) )
+										if( const auto name = it4->second.get_optional< std::string >( "venue.name" ) )
 										{
-											std::cout << "\t\t\tname : " << city.get() << std::endl;
+											data.elem_ = 0;//name.get();
 										}
 
+										if( const auto elem = it4->second.get_optional< std::string >( "venue.location.name" ) )
+										{
+											std::cout << "\t\t\telement : " << elem.get() << std::endl;
+										}
+
+										if( const auto lat = it4->second.get_optional< std::string >( "venue.location.lat" ) )
+										{
+											std::cout << "\t\t\t\tlatitude : " << lat.get() << std::endl;
+										}
+
+										if( const auto lng = it4->second.get_optional< std::string >( "venue.location.lng" ) )
+										{
+											std::cout << "\t\t\t\tlongitude : " << lng.get() << std::endl;
+										}
 									}
 								}
-
 							}
 						}
 					}
