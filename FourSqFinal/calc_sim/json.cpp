@@ -27,9 +27,11 @@ namespace json
 		{
 			std::string city_name_;
 			std::string state_name_;
+			std::string name_;
 			int day_;
 			int time_;
 			int elem_;
+			double latitude_, longitude_; 
 		};
 
 		struct day
@@ -55,9 +57,6 @@ namespace json
 
 	void show_all( const json_reader & jr )
 	{
-		std::vector< std::pair< std::string, \
-			std::vector< std::pair< std::string, std::vector< std::string > > > > > vector;
-
 		auto pt = jr.pt();
 
 		std::vector< personal > people;
@@ -85,7 +84,6 @@ namespace json
 
 						if( const auto log = it2->second.get_child_optional( "log" ) )
 						{
-
 							for( auto it3 = log->begin(), end3 = log->end(); it3 != end3; ++it3 )
 							{
 								personal::data data;
@@ -97,6 +95,7 @@ namespace json
 										+ 60 * boost::lexical_cast< int >( time.get().substr( 3, 2 ) ) \
 										+      boost::lexical_cast< int >( time.get().substr( 6, 2 ) );
 								}
+
 								if( const auto info = it3->second.get_child_optional( "info" ) )
 								{
 									for( auto it4 = info->begin(), end4 = info->end(); it4 != end4; ++it4 )
@@ -108,29 +107,34 @@ namespace json
 
 										if( const auto name = it4->second.get_optional< std::string >( "venue.name" ) )
 										{
-											data.elem_ = 0;//name.get();
+											data.name_ = name.get();
 										}
 
 										if( const auto elem = it4->second.get_optional< std::string >( "venue.location.name" ) )
 										{
-											std::cout << "\t\t\telement : " << elem.get() << std::endl;
+											data.elem_ = 0;//elem.get();
 										}
 
-										if( const auto lat = it4->second.get_optional< std::string >( "venue.location.lat" ) )
+										if( const auto lat = it4->second.get_optional< double >( "venue.location.lat" ) )
 										{
-											std::cout << "\t\t\t\tlatitude : " << lat.get() << std::endl;
+											data.longitude_ = lat.get();
 										}
 
-										if( const auto lng = it4->second.get_optional< std::string >( "venue.location.lng" ) )
+										if( const auto lng = it4->second.get_optional< double >( "venue.location.lng" ) )
 										{
-											std::cout << "\t\t\t\tlongitude : " << lng.get() << std::endl;
+											data.latitude_ = lng.get();
 										}
 									}
 								}
+
+								d.data_.push_back( std::move( data ) );
 							}
 						}
+
+						person.day_.push_back( std::move( d ) );
 					}
 				}
+				people.push_back( std::move( person ) );
 			}
 
 		}
