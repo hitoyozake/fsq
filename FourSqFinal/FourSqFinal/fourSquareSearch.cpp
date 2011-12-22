@@ -24,6 +24,14 @@
 
 namespace search
 {
+	bool judge_is_json_format( const std::string & str )
+	{
+
+
+		return true;
+	}
+
+
 	std::map< string_map::stx::string_symbol, std::string > mp;
 	std::string key;
 	boost::optional< std::string > search_ssl( const std::string & url )
@@ -113,6 +121,8 @@ namespace search
 				tmp_str.pop_back();
 
 				//tmp_str = tmp_str.substr( 1 );
+
+
 
 				mp.insert( std::map< std::string, std::string >::value_type( key, tmp_str ) );
 

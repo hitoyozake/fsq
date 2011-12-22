@@ -4,6 +4,7 @@
 #include <map>
 
 #include <boost/optional.hpp>
+#include <boost/progress.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/lexical_cast.hpp>
@@ -236,9 +237,15 @@ UTF-8 BOM–³‚µ
 int main()
 {
 	json::json_reader js;
-	js.read_file( "outputs.txt" );
-	show_all( js );
+	{
+	boost::progress_timer t;
+	js.read_file( "output.txt" );
+	}
+	{
+		boost::progress_timer t;
 
+		show_all( js );
+	}
 	return 0;
 }
 
