@@ -33,6 +33,7 @@ namespace json
 			int time_;
 			int time_count_;
 			int elem_;
+			std::string elem_name_;
 			double latitude_, longitude_;
 
 			data() : time_count_( 0 ){}
@@ -57,18 +58,52 @@ namespace json
 		return 0;
 	}
 
+	std::vector< std::pair< std::string, int > > map_to_array( const std::map< std::string, int > & map )
+	{
+		std::vector< std::pair< std::string, int > > result;
+
+		for( auto it = map.begin(); it != map.end(); ++it )
+			result.push_back( std::make_pair( it->first, it->second ) );
+
+		const auto best_n = ( std::min< int > )( 10, map.size() );
+
+		std::partial_sort( result.begin(), result.begin() + best_n, result.end(),
+			[]( const std::pair< std::string, int > & a, const std::pair< std::string, int > & b )
+		{
+			return b.second > a.second;
+		} );
+
+		//ベストNを取り出すにはpartial_sortのほうが適当
+		/*
+		std::sort( result.begin(), result.end(), []( const std::pair< std::string, int > & a, const std::pair< std::string, int > & b )
+		{
+			return b.second > a.second;
+		} );
+		*/
+
+		return std::move( result );
+	}
+
+
 	double calc( const std::vector< personal > & people, const personal & person )
 	{
 		const personal * best = nullptr;
 		double max = -1.0;
 
+		const auto person_ranking = map_to_array( person.elem_count_ );
+
 		for( auto it = person.day_.begin(); it != person.day_.end(); ++it )
 		{
+
 			for( auto it2 = it->data_.begin(); it2 != it->data_.end(); ++it2 )
 			{
 				for( auto people_it = people.begin(); people_it != people.end(); ++people_it )
 				{
+
 					double sum = 0;
+
+					const auto tmp_ranking = map_to_array( people_it->elem_count_ );
+					const auto size = tmp_ranking.size();
 
 					//自分は除く
 					if( people_it->name_ == person.name_ )
@@ -76,9 +111,34 @@ namespace json
 
 					for( auto pday = people_it->day_.begin(); pday != people_it->day_.end(); ++pday )
 					{
-						if( pday->data_.find( it2->first ) != pday->data_.end() )
-							sum +=  0.000001 * it2->second.time_count_ * pday->data_.at( it2->first ).time_count_;
+						const auto f = pday->data_.find( it2->first );
 
+						if( f != pday->data_.end() )
+						{
+							//お互いによく良く場所であれば、係数に加算
+							double alpha = 1.0;
+							double beta = 1.0;
+
+							for( unsigned int i = 0; i < size; ++i )
+							{
+								if( tmp_ranking[ i ].first == it2->first )
+								{
+									alpha += 0.1 * ( size - i );
+									break;
+								}
+							}
+
+							const auto rsize = person_ranking.size();
+							for( unsigned int i = 0; i < rsize; ++i )
+							{
+								if( person_ranking[ i ].first == it2->first )
+								{
+									beta += 0.1 * ( size - i );
+									break;
+								}
+							}
+							sum +=  0.000001 * it2->second.time_count_ * f->second.time_count_ * alpha * beta;
+						}
 					}
 					if( max < sum )
 					{
@@ -161,6 +221,8 @@ namespace json
 										if( const auto elem = it4->second.get_optional< std::string >( "venue.location.name" ) )
 										{
 											data.elem_ = 0;//elem.get();
+											data.elem_name_ = elem.get();
+											++person.elem_count_[ elem.get() ];
 										}
 
 										if( const auto lat = it4->second.get_optional< double >( "venue.location.lat" ) )
