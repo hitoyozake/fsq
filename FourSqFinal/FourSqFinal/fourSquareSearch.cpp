@@ -86,14 +86,23 @@ namespace search
 					break;
 			}
 
-			const auto e_mes = error.message();
+			const auto debug_e_mes = error.message();
 			const std::string venuestr = "options['venue']";
 			const auto venue = log_str.find( venuestr );
 			const auto checkin = log_str.find( "options['checkinId']" );
+
 			//std::cout << log_str;
 			if(  venue != std::string::npos && checkin != std::string::npos )
 			{
 				std::string tmp_str = log_str.substr( venue + venuestr.size() + 2, checkin - ( venue + venuestr.size() + 2 ) - 2 );
+
+				//中括弧の数の確認 - jsonとしては完全なはず
+				if( std::count( tmp_str.begin(), tmp_str.end(), '{' ) != \
+					std::count( tmp_str.begin(), tmp_str.end(), '}' ) )
+				{
+					return boost::optional< std::string >();//jsonとしては不完全
+				}
+
 				boost::algorithm::replace_all( tmp_str, "\n", "" );
 				boost::algorithm::replace_all( tmp_str, "\t", "" );
 				boost::algorithm::replace_all( tmp_str, " ", "" );
@@ -117,17 +126,11 @@ namespace search
 							tmp_str.substr( contactfind - 3 ); 
 					}
 				}
-
 				tmp_str.pop_back();
-
 				//tmp_str = tmp_str.substr( 1 );
-
-
-
 				mp.insert( std::map< std::string, std::string >::value_type( key, tmp_str ) );
 
 				return boost::optional< std::string >( tmp_str );
-
 			}
 			return boost::optional< std::string >();
 		}
