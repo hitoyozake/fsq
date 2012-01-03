@@ -10,6 +10,7 @@
 #include <boost/progress.hpp>
 
 #include <boost/asio/ssl.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -195,7 +196,25 @@ void search_main()
 
 	boost::io::ios_rdbuf_saver saver( std::cout );
 	std::string output;
-	std::ifstream ifs( "input.txt" );
+
+	int num = 0;
+
+	{
+		//inputファイルの書き換え・読取
+		{
+			std::ifstream numifs( "num.txt" );
+			numifs >> num;
+		}
+		{
+			std::ofstream numofs( "num.txt" );
+			numofs << ( num + 500 );
+		}
+	}
+
+	const std::string input_name = static_cast< std::string >( "output" ) + \
+		boost::lexical_cast< std::string >( num )
+		+ "-" + boost::lexical_cast< std::string >( num + 499 ) + ".txt" ;
+	std::ifstream ifs( input_name );
 	int counter = 0;
 
 	enum STATE
@@ -381,7 +400,9 @@ void search_main()
 	output.pop_back();
 
 	output += "\n]\n}\n";
-	std::ofstream ofs( "output.txt" );
+	const std::string outputfilename = static_cast< std::string >( "fsqoutput" ) \
+		+ boost::lexical_cast< std::string >( num ) + ".txt"; 
+	std::ofstream ofs( outputfilename );
 	ofs << output;
 
 }

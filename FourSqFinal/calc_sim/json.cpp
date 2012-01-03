@@ -305,7 +305,6 @@ int main()
 	}
 	{
 		boost::progress_timer t;
-
 		show_all( js );
 	}
 	return 0;
