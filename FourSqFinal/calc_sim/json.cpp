@@ -8,6 +8,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
 
 namespace json
 {
@@ -155,6 +156,36 @@ namespace json
 		return max;
 	}
 
+#pragma region ’nŒ³‚Ås‚­êŠ‚Ì‘®«“Œv 
+	std::map< std::string, int > local_element( const personal & person )
+	{
+		std::map< std::string, int > elem_count;
+
+		for( auto it = person.day_.begin(); it != person.day_.end(); ++it )
+		{
+			for( auto it2 = it->data_.begin(); it2 != it->data_.end(); ++it2 )
+			{
+				for( auto local_it = person.base_state_.begin(); local_it != person.base_state_.end(); ++local_it )
+				{
+					if( * local_it == it2->second.state_name_ )
+					{
+						++elem_count[ it2->second.elem_name_ ];
+					}
+				}
+			}
+		}
+
+		const auto size = elem_count.size();
+
+		for( auto it = elem_count.begin(); it != elem_count.end(); ++it )
+		{
+			std::cout << boost::format( "%s : %0.3lf\n" ) % it->first % ( static_cast< double >( it->second ) / size );
+		}
+
+
+		return std::move( elem_count );
+	}
+#pragma endregion
 
 	void show_all( const json_reader & jr )
 	{
