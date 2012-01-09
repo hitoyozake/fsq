@@ -10,6 +10,10 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
 
+#include "distance.h"
+
+#define NOMINMAX
+
 namespace json
 {
 	using namespace boost::property_tree;
@@ -85,22 +89,22 @@ namespace json
 		return std::move( result );
 	}
 
-
+#pragma region 類似度計算
 	double calc( const std::vector< personal > & people, const personal & person )
 	{
 		const personal * best = nullptr;
 		double max = -1.0;
 
 		const auto person_ranking = map_to_array( person.elem_count_ );
+		std::vector< std::pair< double, personal > > best_five;
+
 
 		for( auto it = person.day_.begin(); it != person.day_.end(); ++it )
 		{
-
 			for( auto it2 = it->data_.begin(); it2 != it->data_.end(); ++it2 )
 			{
 				for( auto people_it = people.begin(); people_it != people.end(); ++people_it )
 				{
-
 					double sum = 0;
 
 					const auto tmp_ranking = map_to_array( people_it->elem_count_ );
@@ -141,20 +145,35 @@ namespace json
 							sum +=  0.000001 * it2->second.time_count_ * f->second.time_count_ * alpha * beta;
 						}
 					}
+
+					if( sum > 0.0000001 )
+					{
+						best_five.push_back( std::make_pair( sum,  * people_it ) );
+					}
+
 					if( max < sum )
 					{
 						max = sum;
 						best = & ( * people_it );
 					}
+		
 				}
 			}
 		}
+
+		const int five = std::min< int >( 5, best_five.size() );
+		std::partial_sort( best_five.begin(), best_five.begin() + five, best_five.end(), \
+			[]( const std::pair< double, personal > & a, const std::pair< double, personal  > & b )
+		{
+			return a.first < b.first;
+		} );
 
 		std::cout << "SIMILAR USER : " << best->name_ << std::endl;
 		std::cout << "PARAM : " << max << std::endl;
 
 		return max;
 	}
+#pragma endregion
 
 #pragma region 地元で行く場所の属性統計 
 	std::map< std::string, int > local_element( const personal & person )
@@ -187,6 +206,7 @@ namespace json
 	}
 #pragma endregion
 
+#pragma region パース
 	void show_all( const json_reader & jr )
 	{
 		auto pt = jr.pt();
@@ -217,23 +237,12 @@ namespace json
 						if( const auto log = it2->second.get_child_optional( "log" ) )
 						{
 							int prev_time = -1;
+							double prev_lat = -1;
+							double prev_lon = -1;
+
 							for( auto it3 = log->begin(), end3 = log->end(); it3 != end3; ++it3 )
 							{
 								personal::data data;
-
-								if( const auto time = it3->second.get_optional< std::string >( "time" ) )
-								{
-									data.time_ = 60 * 60 * boost::lexical_cast< int >( time.get().substr( 0, 2 ) )\
-										+ 60 * boost::lexical_cast< int >( time.get().substr( 3, 2 ) ) \
-										+      boost::lexical_cast< int >( time.get().substr( 6, 2 ) );
-
-									if( prev_time != -1 )
-										data.time_count_ = prev_time - data.time_;
-									else
-										data.time_count_ = 0;
-
-									prev_time = data.time_;
-								}
 
 								if( const auto info = it3->second.get_child_optional( "info" ) )
 								{
@@ -268,6 +277,29 @@ namespace json
 									}
 								}
 
+								if( const auto time = it3->second.get_optional< std::string >( "time" ) )
+								{
+									data.time_ = 60 * 60 * boost::lexical_cast< int >( time.get().substr( 0, 2 ) )\
+										+ 60 * boost::lexical_cast< int >( time.get().substr( 3, 2 ) ) \
+										+      boost::lexical_cast< int >( time.get().substr( 6, 2 ) );
+
+									//差を求める
+									if( prev_time != -1 )
+									{
+										const auto dist = distance::get_distance \
+											( prev_lat, prev_lon, data.latitude_, data.longitude_ );
+										data.time_count_ = ( std::max )( 1, prev_time - data.time_ - static_cast< int >( dist ) );
+									}
+									else
+									{
+										data.time_count_ = 0;
+									}
+									//データ更新
+									prev_time = data.time_;
+									prev_lat = data.latitude_;
+									prev_lon = data.longitude_;
+								}
+
 								d.data_[ data.city_name_ ] = data;
 							}
 						}
@@ -282,6 +314,7 @@ namespace json
 
 		calc( people, people[ 1 ] );
 	}
+#pragma endregion
 
 	void json_reader::read_file( const std::string & filename )
 	{

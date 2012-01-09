@@ -164,6 +164,8 @@ namespace search
 
 			ip::tcp::iostream s( uri, "http" );
 
+			s.expires_from_now( boost::posix_time::seconds( 20 ) ); 
+
 			// ëóêM
 			s << "GET /" << site <<" HTTP/1.0\r\n";
 			s << "Host: " << host << "\r\n";
@@ -179,7 +181,10 @@ namespace search
 				//std::cout << line << std::endl;
 			}
 
-			return boost::optional< std::string >( result );
+			if( !s )
+				return boost::optional< std::string >();
+			else
+				return boost::optional< std::string >( result );
 		}
 		catch( std::exception & e )
 		{
