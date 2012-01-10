@@ -164,8 +164,6 @@ namespace search
 
 			ip::tcp::iostream s( uri, "http" );
 
-			s.expires_from_now( boost::posix_time::seconds( 20 ) ); 
-
 			// ‘—M
 			s << "GET /" << site <<" HTTP/1.0\r\n";
 			s << "Host: " << host << "\r\n";

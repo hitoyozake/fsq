@@ -9,6 +9,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
+#include <boost/io/ios_state.hpp>
 
 #include "distance.h"
 
@@ -168,8 +169,8 @@ namespace json
 			return a.first < b.first;
 		} );
 
-		std::cout << "SIMILAR USER : " << best->name_ << std::endl;
-		std::cout << "PARAM : " << max << std::endl;
+		std::cout << boost::format( "user : %s, similar user : %s, value : %d\n\n" ) \
+			% person.name_ % best->name_ % max;
 
 		return max;
 	}
@@ -201,13 +202,12 @@ namespace json
 			std::cout << boost::format( "%s : %0.3lf\n" ) % it->first % ( static_cast< double >( it->second ) / size );
 		}
 
-
 		return std::move( elem_count );
 	}
 #pragma endregion
 
 #pragma region ÉpÅ[ÉX
-	void show_all( const json_reader & jr )
+	std::vector< personal > create_profiles( const json_reader & jr )
 	{
 		auto pt = jr.pt();
 
@@ -311,8 +311,7 @@ namespace json
 			}
 
 		}
-
-		calc( people, people[ 1 ] );
+		return std::move( people );
 	}
 #pragma endregion
 
@@ -368,8 +367,17 @@ int main()
 	js.read_file( "output.txt" );
 	}
 	{
+		std::ofstream ofs( "profilelog.txt" );
+		boost::io::ios_rdbuf_saver( std::ref( std::cout ) );
+		//std::cout.rdbuf( ofs.rdbuf() );
 		boost::progress_timer t;
-		show_all( js );
+		const auto profiles = create_profiles( js );
+
+		for( auto it = profiles.begin(); it != profiles.end(); ++it )
+		{
+			json::calc( profiles, * it );
+		}
+
 	}
 	return 0;
 }
