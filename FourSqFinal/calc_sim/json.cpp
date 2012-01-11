@@ -45,11 +45,15 @@ namespace json
 			data() : time_count_( 0 ){}
 
 		};
+		std::map< std::string, std::string > venue_elem_;
+		std::map< std::string, int > venue_vector_;
+		//場所に対するvector(最大の時間が入る)
+		std::map< std::string, bool > local_;
 
 		struct day
 		{
 			int day_;
-			std::map< std::string, data > data_;
+			std::vector< data > data_;
 		};
 		std::string name_;
 
@@ -90,6 +94,71 @@ namespace json
 		return std::move( result );
 	}
 
+#pragma region 地元のスポットであるかどうか
+	bool is_local( const personal & person, std::string & state )
+	{
+		if( std::find( person.base_state_.begin(), person.base_state_.end(), state ) \
+			!= person.base_state_.end() )
+			return true;
+		else
+			return false;
+	}
+#pragma endregion
+
+	double calc_p2p( const personal & person1, const personal & person2 )
+	{
+		double sum = 0;
+		const auto p1_ranking = map_to_array( person1.elem_count_ );
+		const auto p2_ranking = map_to_array( person2.elem_count_ );
+
+		const auto p1_rank_size = p1_ranking.size();
+		const auto p2_rank_size = p2_ranking.size();
+
+		for( auto it = person1.venue_vector_.begin(); it != person1.venue_vector_.end(); ++it )
+		{
+			const auto f = person2.venue_vector_.find( it->first );
+
+			//地元であれば計算しない
+			if( std::find( person1.base_state_.begin(), person1.base_state_.end(), * person1.local_.find( f->first ) ) != person1.base_state_.end() )
+			{
+				//地元なので計算しない
+				continue;
+			}
+			if( std::find( person2.base_state_.begin(), person2.base_state_.end(), * person2.local_.find( f->first ) ) != person2.base_state_.end() )
+			{
+				//地元なので計算しない
+				continue;
+			}
+
+			if( f != person2.venue_vector_.end() )
+			{
+				double alpha = 1.0;
+				double beta = 1.0;
+
+				//よく行く場所かどうか
+				for( int i = 0; i < p1_ranking.size(); ++i )
+				{
+					if( person1.venue_elem_.find( f->first ) != person1.venue_elem_.end() )
+					{
+						alpha += 1.0 - 0.1 * i; 
+					}
+				}
+				for( int i = 0; i < p2_ranking.size(); ++i )
+				{
+					if( person2.venue_elem_.find( f->first ) != person2.venue_elem_.end() )
+					{
+						alpha += 1.0 - 0.1 * i;
+					}
+				}
+				sum += alpha * it->second * beta * f->second;
+			}
+		}
+
+		return sum;
+	}
+
+
+
 #pragma region 類似度計算
 	double calc( const std::vector< personal > & people, const personal & person )
 	{
@@ -98,7 +167,6 @@ namespace json
 
 		const auto person_ranking = map_to_array( person.elem_count_ );
 		std::vector< std::pair< double, personal > > best_five;
-
 
 		for( auto it = person.day_.begin(); it != person.day_.end(); ++it )
 		{
@@ -149,7 +217,7 @@ namespace json
 
 					if( sum > 0.0000001 )
 					{
-						best_five.push_back( std::make_pair( sum,  * people_it ) );
+						best_five.push_back( std::make_pair( sum, * people_it ) );
 					}
 
 					if( max < sum )
@@ -229,6 +297,7 @@ namespace json
 					for( auto it2 = days->begin(), end2 = days->end(); it2 != end2; ++it2 )
 					{
 						personal::day d;
+						
 						if( const auto day = it2->second.get_optional< std::string >( "day" ) )
 						{
 							d.day_ = boost::lexical_cast< int >( day.get().substr( 1 ) );
@@ -300,10 +369,10 @@ namespace json
 									prev_lon = data.longitude_;
 								}
 
-								d.data_[ data.city_name_ ] = data;
+								d.data_.push_back( data );
+								person.venue_vector_[ data.name_ ] = std::max< int >( person.venue_vector_[ data.name_ ], data.time_ );
 							}
 						}
-
 						person.day_.push_back( std::move( d ) );
 					}
 				}
@@ -369,14 +438,17 @@ int main()
 	{
 		std::ofstream ofs( "profilelog.txt" );
 		boost::io::ios_rdbuf_saver( std::ref( std::cout ) );
-		//std::cout.rdbuf( ofs.rdbuf() );
+		std::cout.rdbuf( ofs.rdbuf() );
 		boost::progress_timer t;
 		const auto profiles = create_profiles( js );
 
-		for( auto it = profiles.begin(); it != profiles.end(); ++it )
+		for( int i = 0; i < 2; ++i )
+			json::calc( profiles, profiles[ i ] );
+
+		/*for( auto it = profiles.begin(); it != profiles.begin() + 2; ++it )
 		{
 			json::calc( profiles, * it );
-		}
+		}*/
 
 	}
 	return 0;
