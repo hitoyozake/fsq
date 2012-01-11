@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 #include <boost/optional.hpp>
 #include <boost/progress.hpp>
@@ -56,17 +57,10 @@ namespace json
 			std::vector< data > data_;
 		};
 		std::string name_;
-
 		std::vector< day > day_;
 		std::map< std::string, int > elem_count_;
-		std::vector< std::string > base_state_;//地元
+		std::set< std::string > base_state_;//地元
 	};
-
-	int get_element()
-	{
-		std::map< std::string, int > element_dectionary;
-		return 0;
-	}
 
 	std::vector< std::pair< std::string, int > > map_to_array( const std::map< std::string, int > & map )
 	{
@@ -95,7 +89,7 @@ namespace json
 	}
 
 #pragma region 地元のスポットであるかどうか
-	bool is_local( const personal & person, std::string & state )
+	bool is_local( const personal & person, const std::string & state )
 	{
 		if( std::find( person.base_state_.begin(), person.base_state_.end(), state ) \
 			!= person.base_state_.end() )
@@ -118,129 +112,74 @@ namespace json
 		{
 			const auto f = person2.venue_vector_.find( it->first );
 
-			//地元であれば計算しない
-			if( std::find( person1.base_state_.begin(), person1.base_state_.end(), * person1.local_.find( f->first ) ) != person1.base_state_.end() )
-			{
-				//地元なので計算しない
-				continue;
-			}
-			if( std::find( person2.base_state_.begin(), person2.base_state_.end(), * person2.local_.find( f->first ) ) != person2.base_state_.end() )
-			{
-				//地元なので計算しない
-				continue;
-			}
-
 			if( f != person2.venue_vector_.end() )
 			{
+				//地元であれば計算しない
+				if( is_local( person1, f->first ) )
+				{
+					//地元なので計算しない
+					continue;
+				}
+				if( is_local( person2, f->first ) )
+				{
+					//地元なので計算しない
+					continue;
+				}
+
 				double alpha = 1.0;
 				double beta = 1.0;
 
 				//よく行く場所かどうか
-				for( int i = 0; i < p1_ranking.size(); ++i )
+				for( unsigned int i = 0; i < p1_ranking.size(); ++i )
 				{
 					if( person1.venue_elem_.find( f->first ) != person1.venue_elem_.end() )
 					{
 						alpha += 1.0 - 0.1 * i; 
 					}
 				}
-				for( int i = 0; i < p2_ranking.size(); ++i )
+				for( unsigned int i = 0; i < p2_ranking.size(); ++i )
 				{
 					if( person2.venue_elem_.find( f->first ) != person2.venue_elem_.end() )
 					{
-						alpha += 1.0 - 0.1 * i;
+						beta += 1.0 - 0.1 * i;
 					}
 				}
-				sum += alpha * it->second * beta * f->second;
+				sum += 0.000001 * alpha * it->second * beta * f->second;
 			}
 		}
 
 		return sum;
 	}
-
-
+#pragma endregion
 
 #pragma region 類似度計算
 	double calc( const std::vector< personal > & people, const personal & person )
 	{
-		const personal * best = nullptr;
-		double max = -1.0;
-
 		const auto person_ranking = map_to_array( person.elem_count_ );
 		std::vector< std::pair< double, personal > > best_five;
 
-		for( auto it = person.day_.begin(); it != person.day_.end(); ++it )
+		for( auto it = people.begin(); it != people.end(); ++it )
 		{
-			for( auto it2 = it->data_.begin(); it2 != it->data_.end(); ++it2 )
-			{
-				for( auto people_it = people.begin(); people_it != people.end(); ++people_it )
-				{
-					double sum = 0;
+			if( it->name_  == person.name_ )
+				continue;
+			
+			const auto value = calc_p2p( person, *it );
 
-					const auto tmp_ranking = map_to_array( people_it->elem_count_ );
-					const auto size = tmp_ranking.size();
-
-					//自分は除く
-					if( people_it->name_ == person.name_ )
-						continue;
-
-					for( auto pday = people_it->day_.begin(); pday != people_it->day_.end(); ++pday )
-					{
-						const auto f = pday->data_.find( it2->first );
-
-						if( f != pday->data_.end() )
-						{
-							//お互いによく良く場所であれば、係数に加算
-							double alpha = 1.0;
-							double beta = 1.0;
-
-							for( unsigned int i = 0; i < size; ++i )
-							{
-								if( tmp_ranking[ i ].first == it2->first )
-								{
-									alpha += 0.1 * ( size - i );
-									break;
-								}
-							}
-
-							const auto rsize = person_ranking.size();
-							for( unsigned int i = 0; i < rsize; ++i )
-							{
-								if( person_ranking[ i ].first == it2->first )
-								{
-									beta += 0.1 * ( size - i );
-									break;
-								}
-							}
-							sum +=  0.000001 * it2->second.time_count_ * f->second.time_count_ * alpha * beta;
-						}
-					}
-
-					if( sum > 0.0000001 )
-					{
-						best_five.push_back( std::make_pair( sum, * people_it ) );
-					}
-
-					if( max < sum )
-					{
-						max = sum;
-						best = & ( * people_it );
-					}
-		
-				}
-			}
+			best_five.push_back( std::make_pair( value, * it ) );
 		}
+
 
 		const int five = std::min< int >( 5, best_five.size() );
 		std::partial_sort( best_five.begin(), best_five.begin() + five, best_five.end(), \
 			[]( const std::pair< double, personal > & a, const std::pair< double, personal  > & b )
 		{
-			return a.first < b.first;
+			return a.first > b.first;
 		} );
 
 		std::cout << boost::format( "user : %s, similar user : %s, value : %d\n\n" ) \
-			% person.name_ % best->name_ % max;
+			% person.name_ % best_five[ 0 ].second.name_ % best_five[ 0 ].first;
 
-		return max;
+		return best_five[ 0 ].first;
 	}
 #pragma endregion
 
@@ -255,9 +194,9 @@ namespace json
 			{
 				for( auto local_it = person.base_state_.begin(); local_it != person.base_state_.end(); ++local_it )
 				{
-					if( * local_it == it2->second.state_name_ )
+					if( * local_it == it2->state_name_ )
 					{
-						++elem_count[ it2->second.elem_name_ ];
+						++elem_count[ it2->elem_name_ ];
 					}
 				}
 			}
@@ -292,15 +231,51 @@ namespace json
 					person.name_ = std::move( user.get() );
 				}
 
+				int month = 0;
+				typedef std::string state_name;
+				std::map< int, std::set< state_name > > states;
 				if( const auto days = it->second.get_child_optional( "days" ) )
 				{
 					for( auto it2 = days->begin(), end2 = days->end(); it2 != end2; ++it2 )
 					{
 						personal::day d;
-						
+						int d_num = 1;
+
 						if( const auto day = it2->second.get_optional< std::string >( "day" ) )
 						{
 							d.day_ = boost::lexical_cast< int >( day.get().substr( 1 ) );
+
+							const auto m = d.day_ / 100 - 100 * ( d.day_ / 10000 );
+							d_num = d.day_ -  100 * ( d.day_ / 100 );
+
+							if( m != month )
+							{
+								std::map< std::string, int > state_counts;
+
+								//統計処理 & 地元登録
+								for( auto sit = states.begin(); sit != states.end(); ++sit )
+								{
+									for( auto sit2 = sit->second.begin(); sit2 != sit->second.end(); ++sit2 )
+									{
+										//日にちごとに1回しか数えられない都道府県をカウントしていく
+										++state_counts[ * sit2 ];
+									}
+								}
+
+								for( auto scit = state_counts.begin(); scit != state_counts.end(); ++scit )
+								{
+									const auto order = 0.4; //13日程度
+
+									//地元に登録
+									if( static_cast< double >( scit->second ) / 31.0 > order )
+									{
+										person.base_state_.insert( scit->first );
+									}
+								}
+								month = m;
+								states.clear();
+							}
+
 						}
 
 						if( const auto log = it2->second.get_child_optional( "log" ) )
@@ -322,6 +297,11 @@ namespace json
 											data.city_name_ = city.get();											
 										}
 
+										if( const auto state = it4->second.get_optional< std::string >( "venue.location.state" ) )
+										{
+											states[ d_num ].insert( state.get() );
+										}
+
 										if( const auto name = it4->second.get_optional< std::string >( "venue.name" ) )
 										{
 											data.name_ = name.get();
@@ -332,6 +312,7 @@ namespace json
 											data.elem_ = 0;//elem.get();
 											data.elem_name_ = elem.get();
 											++person.elem_count_[ elem.get() ];
+											person.venue_elem_[ data.name_ ] = elem.get();
 										}
 
 										if( const auto lat = it4->second.get_optional< double >( "venue.location.lat" ) )
@@ -376,6 +357,8 @@ namespace json
 						person.day_.push_back( std::move( d ) );
 					}
 				}
+				//for( auto it = person.base_state_.begin(); it != person.base_state_.end(); ++it )
+				//	std::cout << * it << std::endl;
 				people.push_back( std::move( person ) );
 			}
 
@@ -438,17 +421,18 @@ int main()
 	{
 		std::ofstream ofs( "profilelog.txt" );
 		boost::io::ios_rdbuf_saver( std::ref( std::cout ) );
-		std::cout.rdbuf( ofs.rdbuf() );
+		//std::cout.rdbuf( ofs.rdbuf() );
 		boost::progress_timer t;
 		const auto profiles = create_profiles( js );
 
-		for( int i = 0; i < 2; ++i )
+		/*for( int i = 0; i < 2; ++i )
+		{
 			json::calc( profiles, profiles[ i ] );
-
-		/*for( auto it = profiles.begin(); it != profiles.begin() + 2; ++it )
+		}*/
+		for( auto it = profiles.begin(); it != profiles.end(); ++it )
 		{
 			json::calc( profiles, * it );
-		}*/
+		}
 
 	}
 	return 0;
