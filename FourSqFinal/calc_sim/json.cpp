@@ -47,7 +47,7 @@ namespace json
 
 		};
 		std::map< std::string, std::string > venue_elem_;
-		std::map< std::string, int > venue_vector_;
+		std::map< std::pair< std::string, std::string >, int > venue_vector_;
 		//場所に対するvector(最大の時間が入る)
 		std::map< std::string, bool > local_;
 
@@ -91,6 +91,7 @@ namespace json
 #pragma region 地元のスポットであるかどうか
 	bool is_local( const personal & person, const std::string & state )
 	{
+
 		if( std::find( person.base_state_.begin(), person.base_state_.end(), state ) \
 			!= person.base_state_.end() )
 			return true;
@@ -115,12 +116,12 @@ namespace json
 			if( f != person2.venue_vector_.end() )
 			{
 				//地元であれば計算しない
-				if( is_local( person1, f->first ) )
+				if( is_local( person1, f->first.second ) )
 				{
 					//地元なので計算しない
 					continue;
 				}
-				if( is_local( person2, f->first ) )
+				if( is_local( person2, f->first.second ) )
 				{
 					//地元なので計算しない
 					continue;
@@ -132,14 +133,14 @@ namespace json
 				//よく行く場所かどうか
 				for( unsigned int i = 0; i < p1_ranking.size(); ++i )
 				{
-					if( person1.venue_elem_.find( f->first ) != person1.venue_elem_.end() )
+					if( person1.venue_elem_.find( f->first.second ) != person1.venue_elem_.end() )
 					{
 						alpha += 1.0 - 0.1 * i; 
 					}
 				}
 				for( unsigned int i = 0; i < p2_ranking.size(); ++i )
 				{
-					if( person2.venue_elem_.find( f->first ) != person2.venue_elem_.end() )
+					if( person2.venue_elem_.find( f->first.second ) != person2.venue_elem_.end() )
 					{
 						beta += 1.0 - 0.1 * i;
 					}
@@ -264,7 +265,7 @@ namespace json
 
 								for( auto scit = state_counts.begin(); scit != state_counts.end(); ++scit )
 								{
-									const auto order = 0.4; //13日程度
+									const auto order = 0.32; //10日程度
 
 									//地元に登録
 									if( static_cast< double >( scit->second ) / 31.0 > order )
@@ -300,6 +301,7 @@ namespace json
 										if( const auto state = it4->second.get_optional< std::string >( "venue.location.state" ) )
 										{
 											states[ d_num ].insert( state.get() );
+											data.state_name_ = state.get();
 										}
 
 										if( const auto name = it4->second.get_optional< std::string >( "venue.name" ) )
@@ -351,14 +353,15 @@ namespace json
 								}
 
 								d.data_.push_back( data );
-								person.venue_vector_[ data.name_ ] = std::max< int >( person.venue_vector_[ data.name_ ], data.time_ );
+								person.venue_vector_[ std::make_pair( data.name_, data.state_name_ ) ] = std::max< int >( person.venue_vector_[ std::make_pair( data.name_, data.state_name_ ) ], data.time_ );
 							}
 						}
 						person.day_.push_back( std::move( d ) );
 					}
 				}
-				//for( auto it = person.base_state_.begin(); it != person.base_state_.end(); ++it )
-				//	std::cout << * it << std::endl;
+				std::cout << person.name_ << std::endl;
+				for( auto it = person.base_state_.begin(); it != person.base_state_.end(); ++it )
+					std::cout << * it << std::endl;
 				people.push_back( std::move( person ) );
 			}
 
@@ -413,15 +416,16 @@ UTF-8 BOM無し
 
 int main()
 {
+	std::ofstream ofs( "profilelog.txt" );
+	std::cout.rdbuf( ofs.rdbuf() );
+
 	json::json_reader js;
 	{
-	boost::progress_timer t;
-	js.read_file( "output.txt" );
+		boost::progress_timer t;
+		js.read_file( "output.txt" );
 	}
 	{
-		std::ofstream ofs( "profilelog.txt" );
 		boost::io::ios_rdbuf_saver( std::ref( std::cout ) );
-		//std::cout.rdbuf( ofs.rdbuf() );
 		boost::progress_timer t;
 		const auto profiles = create_profiles( js );
 
