@@ -188,7 +188,7 @@ namespace json
 	std::map< std::string, int > local_element( const personal & person )
 	{
 		std::map< std::string, int > elem_count;
-
+		int count = 0;
 		for( auto it = person.day_.begin(); it != person.day_.end(); ++it )
 		{
 			for( auto it2 = it->data_.begin(); it2 != it->data_.end(); ++it2 )
@@ -198,13 +198,15 @@ namespace json
 					if( * local_it == it2->state_name_ )
 					{
 						++elem_count[ it2->elem_name_ ];
+						++count;
 					}
 				}
 			}
 		}
 
-		const auto size = elem_count.size();
+		const auto size = std::max< int >( count, 1 );//elem_count.size();
 
+		std::cout << person.name_ << std::endl;
 		for( auto it = elem_count.begin(); it != elem_count.end(); ++it )
 		{
 			std::cout << boost::format( "%s : %0.3lf\n" ) % it->first % ( static_cast< double >( it->second ) / size );
@@ -309,13 +311,21 @@ namespace json
 											data.name_ = name.get();
 										}
 
-										if( const auto elem = it4->second.get_optional< std::string >( "venue.location.name" ) )
+
+										if( const auto categories = it4->second.get_child_optional( "venue.categories" ) )
 										{
-											data.elem_ = 0;//elem.get();
-											data.elem_name_ = elem.get();
-											++person.elem_count_[ elem.get() ];
-											person.venue_elem_[ data.name_ ] = elem.get();
+											for( auto cit = categories->begin(); cit != categories->end(); ++cit )
+											{
+												if( const auto elem = cit->second.get_optional< std::string >( "name" ) )
+												{
+													data.elem_ = 0;//elem.get();
+													data.elem_name_ = elem.get();
+													++person.elem_count_[ elem.get() ];
+													person.venue_elem_[ data.name_ ] = elem.get();
+												}
+											}
 										}
+										
 
 										if( const auto lat = it4->second.get_optional< double >( "venue.location.lat" ) )
 										{
@@ -416,8 +426,8 @@ UTF-8 BOM–³‚µ
 
 int main()
 {
-	std::ofstream ofs( "profilelog.txt" );
-	std::cout.rdbuf( ofs.rdbuf() );
+	//std::ofstream ofs( "profilelog.txt" );
+	//std::cout.rdbuf( ofs.rdbuf() );
 
 	json::json_reader js;
 	{
@@ -435,7 +445,9 @@ int main()
 		}*/
 		for( auto it = profiles.begin(); it != profiles.end(); ++it )
 		{
-			json::calc( profiles, * it );
+			json::local_element( * it );
+
+			//json::calc( profiles, * it );
 		}
 
 	}
