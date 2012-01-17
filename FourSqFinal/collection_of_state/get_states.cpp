@@ -75,7 +75,7 @@ int main()
 
 	if( ! infile.fail() )
 	{
-		read_and_write_files( infile, "venue" );
+		read_and_write_files( infile, "\"H—tŒ´" );
 	}
 	else
 	{
