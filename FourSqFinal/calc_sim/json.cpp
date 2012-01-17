@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <fstream>
 
 #include <boost/optional.hpp>
 #include <boost/progress.hpp>
@@ -11,6 +12,16 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
 #include <boost/io/ios_state.hpp>
+
+#include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/regex.hpp>
+#include <boost/ref.hpp>
+#include <boost/thread.hpp>
+
+#pragma comment( lib, "boost_system-vc100-mt-gd-1_47.lib" )
+
 
 #include "distance.h"
 
@@ -22,7 +33,7 @@ namespace json
 	class json_reader
 	{
 	public:
-		void read_file( const std::string & filename );
+		bool read_file( const std::string & filename );
 		ptree pt() const{ return pt_; }
 
 	private:
@@ -216,6 +227,174 @@ namespace json
 	}
 #pragma endregion
 
+	#pragma region パースkyoto
+	std::vector< personal > create_profiles_kyoto( const json_reader & jr )
+	{
+		auto pt = jr.pt();
+
+		std::vector< personal > people;
+
+		if( const auto data = pt.get_child_optional( "data" ) )
+		{
+			for( auto it = data->begin(), end = data->end(); it != end; ++it )
+			{
+				personal person;
+				bool kyoto = false;
+
+				if( auto user = it->second.get_optional< std::string >( "user" ) )
+				{
+					person.name_ = std::move( user.get() );
+				}
+
+				int month = 0;
+				typedef std::string state_name;
+				std::map< int, std::set< state_name > > states;
+				if( const auto days = it->second.get_child_optional( "days" ) )
+				{
+					for( auto it2 = days->begin(), end2 = days->end(); it2 != end2; ++it2 )
+					{
+						personal::day d;
+						int d_num = 1;
+
+						if( const auto day = it2->second.get_optional< std::string >( "day" ) )
+						{
+							d.day_ = boost::lexical_cast< int >( day.get().substr( 1 ) );
+
+							const auto m = d.day_ / 100 - 100 * ( d.day_ / 10000 );
+							d_num = d.day_ -  100 * ( d.day_ / 100 );
+
+							if( m != month )
+							{
+								std::map< std::string, int > state_counts;
+
+								//統計処理 & 地元登録
+								for( auto sit = states.begin(); sit != states.end(); ++sit )
+								{
+									for( auto sit2 = sit->second.begin(); sit2 != sit->second.end(); ++sit2 )
+									{
+										//日にちごとに1回しか数えられない都道府県をカウントしていく
+										++state_counts[ * sit2 ];
+									}
+								}
+
+								for( auto scit = state_counts.begin(); scit != state_counts.end(); ++scit )
+								{
+									const auto order = 0.32; //10日程度
+
+									//地元に登録
+									if( static_cast< double >( scit->second ) / 31.0 > order )
+									{
+										person.base_state_.insert( scit->first );
+									}
+								}
+								month = m;
+								states.clear();
+							}
+
+						}
+
+						if( const auto log = it2->second.get_child_optional( "log" ) )
+						{
+							int prev_time = -1;
+							double prev_lat = -1;
+							double prev_lon = -1;
+
+							for( auto it3 = log->begin(), end3 = log->end(); it3 != end3; ++it3 )
+							{
+								personal::data data;
+
+								if( const auto info = it3->second.get_child_optional( "info" ) )
+								{
+									for( auto it4 = info->begin(), end4 = info->end(); it4 != end4; ++it4 )
+									{
+										if( const auto city = it4->second.get_optional< std::string >( "venue.location.city" ) )
+										{
+											data.city_name_ = city.get();											
+										}
+
+										if( const auto state = it4->second.get_optional< std::string >( "venue.location.state" ) )
+										{
+											states[ d_num ].insert( state.get() );
+											data.state_name_ = state.get();
+											if( data.state_name_ == "京都府" )
+											{
+												kyoto = true;
+											}
+										}
+
+										if( const auto name = it4->second.get_optional< std::string >( "venue.name" ) )
+										{
+											data.name_ = name.get();
+										}
+
+
+										if( const auto categories = it4->second.get_child_optional( "venue.categories" ) )
+										{
+											for( auto cit = categories->begin(); cit != categories->end(); ++cit )
+											{
+												if( const auto elem = cit->second.get_optional< std::string >( "name" ) )
+												{
+													data.elem_ = 0;//elem.get();
+													data.elem_name_ = elem.get();
+													++person.elem_count_[ elem.get() ];
+													person.venue_elem_[ data.name_ ] = elem.get();
+												}
+											}
+										}
+										
+
+										if( const auto lat = it4->second.get_optional< double >( "venue.location.lat" ) )
+										{
+											data.longitude_ = lat.get();
+										}
+
+										if( const auto lng = it4->second.get_optional< double >( "venue.location.lng" ) )
+										{
+											data.latitude_ = lng.get();
+										}
+									}
+								}
+
+								if( const auto time = it3->second.get_optional< std::string >( "time" ) )
+								{
+									data.time_ = 60 * 60 * boost::lexical_cast< int >( time.get().substr( 0, 2 ) )\
+										+ 60 * boost::lexical_cast< int >( time.get().substr( 3, 2 ) ) \
+										+      boost::lexical_cast< int >( time.get().substr( 6, 2 ) );
+
+									//差を求める
+									if( prev_time != -1 )
+									{
+										const auto dist = distance::get_distance \
+											( prev_lat, prev_lon, data.latitude_, data.longitude_ );
+										data.time_count_ = ( std::max )( 1, prev_time - data.time_ - static_cast< int >( dist ) );
+									}
+									else
+									{
+										data.time_count_ = 0;
+									}
+									//データ更新
+									prev_time = data.time_;
+									prev_lat = data.latitude_;
+									prev_lon = data.longitude_;
+								}
+
+								d.data_.push_back( data );
+								person.venue_vector_[ std::make_pair( data.name_, data.state_name_ ) ] = std::max< int >( person.venue_vector_[ std::make_pair( data.name_, data.state_name_ ) ], data.time_ );
+							}
+						}
+						person.day_.push_back( std::move( d ) );
+					}
+				}
+				std::cout << person.name_ << std::endl;
+				if( kyoto )
+					people.push_back( std::move( person ) );
+			}
+
+		}
+		return std::move( people );
+	}
+#pragma endregion
+
 #pragma region パース
 	std::vector< personal > create_profiles( const json_reader & jr )
 	{
@@ -326,7 +505,6 @@ namespace json
 											}
 										}
 										
-
 										if( const auto lat = it4->second.get_optional< double >( "venue.location.lat" ) )
 										{
 											data.longitude_ = lat.get();
@@ -380,7 +558,7 @@ namespace json
 	}
 #pragma endregion
 
-	void json_reader::read_file( const std::string & filename )
+	bool json_reader::read_file( const std::string & filename )
 	{
 		ptree pt;
 		try
@@ -389,10 +567,12 @@ namespace json
 		}
 		catch( std::exception & e )
 		{
+			std::cerr << filename << std::endl;
 			std::cerr << e.what() << std::endl;
-			return;
+			return false;
 		}
 		pt_ = std::move( pt );
+		return true;
 	}
 }
 
@@ -424,33 +604,80 @@ info.child
 UTF-8 BOM無し
 */
 
+void kyoto_all()
+{
+	using namespace std;
+	using namespace json;
+
+	json_reader js;
+	namespace fs = boost::filesystem;
+
+	vector< personal > profiles;
+
+	for( fs::directory_iterator it( fs::current_path() ), end; it != end; ++it )
+	{
+		boost::regex rgx( "([1-9]*|[a-z]*|[A-Z]*).txt" );
+		
+		boost::smatch match;
+		const std::string s = it->path().filename().string();
+
+		if( boost::regex_search( s, match, rgx ) )
+		{
+			std::cout << match.str() << std::endl;
+			const std::string filename = s;
+			if( js.read_file( filename ) )
+			{
+				const auto tmp = create_profiles_kyoto( js );
+
+				for( auto it = tmp.begin(); it != tmp.end(); ++it )
+					profiles.push_back( * it );
+			}
+		}
+	}
+	//ファイルの読み込みがすべて終わり
+	
+	//京都のみなので
+	for( auto it = profiles.begin(); it != profiles.end(); ++it )
+	{
+		json::local_element( * it );
+
+		//json::calc( profiles, * it );
+	}
+
+}
+
+
+
 int main()
 {
-	//std::ofstream ofs( "profilelog.txt" );
-	//std::cout.rdbuf( ofs.rdbuf() );
 
-	json::json_reader js;
-	{
-		boost::progress_timer t;
-		js.read_file( "output.txt" );
-	}
-	{
-		boost::io::ios_rdbuf_saver( std::ref( std::cout ) );
-		boost::progress_timer t;
-		const auto profiles = create_profiles( js );
+	std::ofstream ofs( "profilelog.txt" );
+	std::cout.rdbuf( ofs.rdbuf() );
 
-		/*for( int i = 0; i < 2; ++i )
-		{
-			json::calc( profiles, profiles[ i ] );
-		}*/
-		for( auto it = profiles.begin(); it != profiles.end(); ++it )
-		{
-			json::local_element( * it );
+	kyoto_all();
 
-			//json::calc( profiles, * it );
-		}
+	//json::json_reader js;
+	//{
+	//	boost::progress_timer t;
+	//	js.read_file( "output.txt" );
+	//}
+	//{
+	//	boost::io::ios_rdbuf_saver( std::ref( std::cout ) );
+	//	boost::progress_timer t;
+	//	const auto profiles = create_profiles( js );
 
-	}
+	//	/*for( int i = 0; i < 2; ++i )
+	//	{
+	//		json::calc( profiles, profiles[ i ] );
+	//	}*/
+	//	for( auto it = profiles.begin(); it != profiles.end(); ++it )
+	//	{
+	//		json::local_element( * it );
+
+	//		//json::calc( profiles, * it );
+	//	}
+
+	//}
 	return 0;
 }
 
