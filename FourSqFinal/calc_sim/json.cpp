@@ -228,7 +228,77 @@ namespace json
 	}
 #pragma endregion
 
-	#pragma region パースkyoto
+#pragma region 京都で行く場所の属性統計 
+	std::map< std::string, int > kyoto_element( const personal & person, const std::string & kyoto  )
+	{
+		std::map< std::string, int > elem_count;
+		int count = 0;
+		for( auto it = person.day_.begin(); it != person.day_.end(); ++it )
+		{
+			for( auto it2 = it->data_.begin(); it2 != it->data_.end(); ++it2 )
+			{
+				for( auto local_it = person.base_state_.begin(); local_it != person.base_state_.end(); ++local_it )
+				{
+					if( * local_it == kyoto )
+					{
+						++elem_count[ it2->elem_name_ ];
+						++count;
+					}
+				}
+			}
+		}
+
+		const auto size = std::max< int >( count, 1 );//elem_count.size();
+
+		std::cout << person.name_ << std::endl;
+		for( auto it = elem_count.begin(); it != elem_count.end(); ++it )
+		{
+			//std::cout << boost::format( "%s : %0.3lf\n" ) % it->first % ( static_cast< double >( it->second ) / size );
+		}
+
+		return std::move( elem_count );
+	}
+#pragma endregion
+
+#pragma region 京都で行く場所の属性統計 (地元じゃない人)
+	std::map< std::string, int > kyoto_not_element( const personal & person, const std::string & kyoto  )
+	{
+		std::map< std::string, int > elem_count;
+		int count = 0;
+
+		for( auto local_it = person.base_state_.begin(); local_it != person.base_state_.end(); ++local_it )
+		{
+			if( * local_it == kyoto )
+			{
+				return std::move( elem_count );
+			}
+		}
+
+		for( auto it = person.day_.begin(); it != person.day_.end(); ++it )
+		{
+			for( auto it2 = it->data_.begin(); it2 != it->data_.end(); ++it2 )
+			{
+				if( it2->state_name_ == kyoto )
+				{
+					++elem_count[ it2->elem_name_ ];
+					++count;
+				}
+			}
+		}
+
+		const auto size = std::max< int >( count, 1 );//elem_count.size();
+
+		//std::cout << person.name_ << std::endl;
+		for( auto it = elem_count.begin(); it != elem_count.end(); ++it )
+		{
+			//std::cout << boost::format( "\t%s : %0.3lf\n" ) % it->first % ( static_cast< double >( it->second ) / size );
+		}
+
+		return std::move( elem_count );
+	}
+#pragma endregion
+
+#pragma region パースkyoto
 	std::vector< personal > create_profiles_kyoto( const json_reader & jr, const std::string & kt )
 	{
 		auto pt = jr.pt();
@@ -286,7 +356,7 @@ namespace json
 
 								for( auto scit = state_counts.begin(); scit != state_counts.end(); ++scit )
 								{
-									const auto order = 0.32; //10日程度
+									const auto order = 0.27; //6日程度
 
 									//地元に登録
 									if( static_cast< double >( scit->second ) / 31.0 > order )
@@ -401,7 +471,7 @@ namespace json
 				
 				if( kyoto )
 				{
-					std::cout << person.name_ << std::endl;
+					//std::cout << person.name_ << std::endl;
 					people.push_back( std::move( person ) );
 				}
 				kyoto = false;
@@ -638,6 +708,9 @@ void thread_work( bool & lockf, bool & lockp, std::vector< std::string > & files
 				files.pop_back();
 				lockf = false;
 				json::json_reader js;
+
+				std::cerr << "start:" << filename << std::endl;
+
 				if( js.read_file( filename ) )
 				{
 					const auto tmp = create_profiles_kyoto( js, kt );
@@ -693,7 +766,7 @@ void kyoto_all()
 
 		if( boost::regex_search( s, match, rgx ) )
 		{
-			std::cout << match.str() << std::endl;
+			std::cerr << "reading: " << s << std::endl;
 			const std::string filename = s;
 
 			files.push_back( std::move( filename ) );
@@ -716,13 +789,57 @@ void kyoto_all()
 
 	//ファイルの読み込みがすべて終わり
 	
+	map< string, int > kyoto;
+	map< string, int > not_kyoto;
+	int kcount = 0;
+	int nkcount = 0;
+
 	//京都のみなので
 	for( auto it = profiles.begin(); it != profiles.end(); ++it )
 	{
-		json::local_element( * it );
+		auto k = json::kyoto_element( * it, kt );
+
+		//地元が
+		//京都だった場合の、京都での統計
+		//京都じゃなかった場合の、京都での統計
 
 		//json::calc( profiles, * it );
+		for( auto it2 = k.begin(); it2 != k.end(); ++it2 )
+		{
+			kyoto[ it2->first ] += it2->second;
+			kcount += it2->second;
+		}
 	}
+
+	cout << "=========KYOTO================" << endl;
+
+	for( auto it = kyoto.begin(); it != kyoto.end(); ++it )
+		cout << it->first << " : " << 1.0 * it->second / kcount << endl;
+
+	
+	//京都のみなので、地元京都じゃない人の京都
+	for( auto it = profiles.begin(); it != profiles.end(); ++it )
+	{
+		auto nk = json::kyoto_not_element( * it, kt );
+
+		//地元が
+		//京都だった場合の、京都での統計
+		//京都じゃなかった場合の、京都での統計
+
+		//json::calc( profiles, * it );
+
+		for( auto it2 = nk.begin(); it2 != nk.end(); ++it2 )
+		{
+			not_kyoto[ it2->first ] += it2->second;
+			nkcount += it2->second;
+		}
+	}
+
+	cout << endl << endl;
+	cout << "=============NOT KYOTO=======================" << endl;
+
+	for( auto it = not_kyoto.begin(); it != not_kyoto.end(); ++it )
+		cout << it->first << " : " << 1.0 * it->second / nkcount << endl;
 
 }
 
