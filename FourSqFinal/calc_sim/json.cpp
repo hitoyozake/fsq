@@ -20,6 +20,7 @@
 #include <boost/ref.hpp>
 #include <boost/thread.hpp>
 
+
 #pragma comment( lib, "boost_system-vc100-mt-gd-1_47.lib" )
 
 
@@ -388,6 +389,7 @@ namespace json
 				std::cout << person.name_ << std::endl;
 				if( kyoto )
 					people.push_back( std::move( person ) );
+				kyoto = false;
 			}
 
 		}
@@ -604,6 +606,50 @@ info.child
 UTF-8 BOM無し
 */
 
+void thread_work( bool & lockf, bool & lockp, std::vector< std::string > & files, std::vector< json::personal > & profiles )
+{
+	using namespace std;
+	while( files.size() )
+	{
+		string filename;
+
+		if( ! lockf )
+		{
+			lockf = true;
+			boost::this_thread::sleep( boost::posix_time::milliseconds( 10 ) );
+			if( files.size() > 0 )
+			{
+				filename = files.back();
+				files.pop_back();
+				lockf = false;
+				json::json_reader js;
+				if( js.read_file( filename ) )
+				{
+					const auto tmp = create_profiles_kyoto( js );
+					bool finished = false;
+					do
+					{
+						if( lockp )
+						{
+							boost::this_thread::sleep( boost::posix_time::milliseconds( 20 ) );
+						}
+						else
+						{
+							lockp = true;
+							boost::this_thread::sleep( boost::posix_time::milliseconds( 10 ) );
+							for( auto it = tmp.begin(); it != tmp.end(); ++it )
+								profiles.push_back( * it );
+							lockp = false;
+							finished = true;
+						}
+					}while( ! finished );
+				}
+			}
+		}
+	}
+}
+
+
 void kyoto_all()
 {
 	using namespace std;
@@ -613,6 +659,8 @@ void kyoto_all()
 	namespace fs = boost::filesystem;
 
 	vector< personal > profiles;
+	vector< string > files;
+
 
 	for( fs::directory_iterator it( fs::current_path() ), end; it != end; ++it )
 	{
@@ -625,15 +673,25 @@ void kyoto_all()
 		{
 			std::cout << match.str() << std::endl;
 			const std::string filename = s;
-			if( js.read_file( filename ) )
-			{
-				const auto tmp = create_profiles_kyoto( js );
 
-				for( auto it = tmp.begin(); it != tmp.end(); ++it )
-					profiles.push_back( * it );
-			}
+			files.push_back( std::move( filename ) );
 		}
 	}
+
+	bool lockf = false;
+	bool lockp = false;
+	
+	boost::thread th1( thread_work, std::ref( lockf ), std::ref( lockp ), std::ref( files ), std::ref( profiles ) );
+	boost::thread th2( thread_work, std::ref( lockf ), std::ref( lockp ), std::ref( files ), std::ref( profiles ) );
+	boost::thread th3( thread_work, std::ref( lockf ), std::ref( lockp ), std::ref( files ), std::ref( profiles ) );
+	boost::thread th4( thread_work, std::ref( lockf ), std::ref( lockp ), std::ref( files ), std::ref( profiles ) );
+
+	//終了待ち
+	th1.join();
+	th2.join();
+	th3.join();
+	th4.join();
+
 	//ファイルの読み込みがすべて終わり
 	
 	//京都のみなので
