@@ -229,7 +229,7 @@ namespace json
 #pragma endregion
 
 	#pragma region ÉpÅ[ÉXkyoto
-	std::vector< personal > create_profiles_kyoto( const json_reader & jr )
+	std::vector< personal > create_profiles_kyoto( const json_reader & jr, const std::string & kt )
 	{
 		auto pt = jr.pt();
 
@@ -323,7 +323,7 @@ namespace json
 										{
 											states[ d_num ].insert( state.get() );
 											data.state_name_ = state.get();
-											if( data.state_name_ == "ãûìsï{" )
+											if( data.state_name_ == kt )
 											{
 												kyoto = true;
 											}
@@ -621,7 +621,7 @@ info.child
 UTF-8 BOMñ≥Çµ
 */
 
-void thread_work( bool & lockf, bool & lockp, std::vector< std::string > & files, std::vector< json::personal > & profiles )
+void thread_work( bool & lockf, bool & lockp, std::vector< std::string > & files, std::vector< json::personal > & profiles, const std::string & kt )
 {
 	using namespace std;
 	while( files.size() )
@@ -640,7 +640,7 @@ void thread_work( bool & lockf, bool & lockp, std::vector< std::string > & files
 				json::json_reader js;
 				if( js.read_file( filename ) )
 				{
-					const auto tmp = create_profiles_kyoto( js );
+					const auto tmp = create_profiles_kyoto( js, kt );
 					bool finished = false;
 					do
 					{
@@ -678,6 +678,11 @@ void kyoto_all()
 	vector< personal > profiles;
 	vector< string > files;
 
+	string kt;
+	{
+		ifstream ifs( "kyoto.txt" );
+		getline( ifs, kt );
+	}
 
 	for( fs::directory_iterator it( fs::current_path() ), end; it != end; ++it )
 	{
@@ -698,10 +703,10 @@ void kyoto_all()
 	bool lockf = false;
 	bool lockp = false;
 	
-	boost::thread th1( thread_work, std::ref( lockf ), std::ref( lockp ), std::ref( files ), std::ref( profiles ) );
-	boost::thread th2( thread_work, std::ref( lockf ), std::ref( lockp ), std::ref( files ), std::ref( profiles ) );
-	boost::thread th3( thread_work, std::ref( lockf ), std::ref( lockp ), std::ref( files ), std::ref( profiles ) );
-	boost::thread th4( thread_work, std::ref( lockf ), std::ref( lockp ), std::ref( files ), std::ref( profiles ) );
+	boost::thread th1( thread_work, std::ref( lockf ), std::ref( lockp ), std::ref( files ), std::ref( profiles ), kt );
+	boost::thread th2( thread_work, std::ref( lockf ), std::ref( lockp ), std::ref( files ), std::ref( profiles ), kt );
+	boost::thread th3( thread_work, std::ref( lockf ), std::ref( lockp ), std::ref( files ), std::ref( profiles ), kt );
+	boost::thread th4( thread_work, std::ref( lockf ), std::ref( lockp ), std::ref( files ), std::ref( profiles ), kt );
 
 	//èIóπë“Çø
 	th1.join();
