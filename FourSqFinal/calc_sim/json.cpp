@@ -813,7 +813,18 @@ void kyoto_all()
 
 	cout << "=========KYOTO================" << endl;
 
+	vector< pair< string, int > > ktv;
+
 	for( auto it = kyoto.begin(); it != kyoto.end(); ++it )
+	{
+		ktv.push_back( make_pair( it->first, it->second ) );
+	}
+	sort( ktv.begin(), ktv.end(), []( const pair< string, int > & a, const pair< string, int > & b )
+	{
+		return a.second > b.second;
+	} );
+
+	for( auto it = ktv.begin(); it != ktv.end(); ++it )
 		cout << it->first << " : " << 1.0 * it->second / kcount << endl;
 
 	
@@ -837,8 +848,18 @@ void kyoto_all()
 
 	cout << endl << endl;
 	cout << "=============NOT KYOTO=======================" << endl;
-
+	vector< pair< string, int > > nktv;
 	for( auto it = not_kyoto.begin(); it != not_kyoto.end(); ++it )
+	{
+		nktv.push_back( make_pair( it->first, it->second ) );
+	}
+
+	sort( nktv.begin(), nktv.end(), []( const pair< string, int > & a, const pair< string, int > & b )
+	{
+		return a.second > b.second;
+	} );
+
+	for( auto it = nktv.rbegin(); it != nktv.rend(); ++it )
 		cout << it->first << " : " << 1.0 * it->second / nkcount << endl;
 
 }
