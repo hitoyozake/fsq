@@ -259,8 +259,14 @@ namespace json
 
 						if( const auto day = it2->second.get_optional< std::string >( "day" ) )
 						{
-							d.day_ = boost::lexical_cast< int >( day.get().substr( 1 ) );
-
+							try
+							{
+								d.day_ = boost::lexical_cast< int >( day.get().substr( 1 ) );
+							}
+							catch( std::exception & e )
+							{
+								d.day_ = 0;
+							}
 							const auto m = d.day_ / 100 - 100 * ( d.day_ / 10000 );
 							d_num = d.day_ -  100 * ( d.day_ / 100 );
 
@@ -358,10 +364,16 @@ namespace json
 
 								if( const auto time = it3->second.get_optional< std::string >( "time" ) )
 								{
+									try
+									{
 									data.time_ = 60 * 60 * boost::lexical_cast< int >( time.get().substr( 0, 2 ) )\
 										+ 60 * boost::lexical_cast< int >( time.get().substr( 3, 2 ) ) \
 										+      boost::lexical_cast< int >( time.get().substr( 6, 2 ) );
-
+									}
+									catch( std::exception & e )
+									{
+										data.time_ = 0;
+									}
 									//ç∑ÇãÅÇﬂÇÈ
 									if( prev_time != -1 )
 									{
@@ -386,9 +398,12 @@ namespace json
 						person.day_.push_back( std::move( d ) );
 					}
 				}
-				std::cout << person.name_ << std::endl;
+				
 				if( kyoto )
+				{
+					std::cout << person.name_ << std::endl;
 					people.push_back( std::move( person ) );
+				}
 				kyoto = false;
 			}
 
@@ -645,6 +660,8 @@ void thread_work( bool & lockf, bool & lockp, std::vector< std::string > & files
 					}while( ! finished );
 				}
 			}
+			else
+				lockf = false;
 		}
 	}
 }
