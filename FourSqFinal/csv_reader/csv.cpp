@@ -5,6 +5,7 @@
 #include <map>
 #include <boost/optional.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
 
 struct value
 {
@@ -17,23 +18,19 @@ struct value
 	value(){}
 };
 
-boost::optional< std::vector< value > > parse( const std::string & str )
+value parse( const std::string & str )
 {
 	using namespace std;
 	
 	const auto f = str.find( "," );
 	const auto name = str.substr( 0, f );
+
 	const auto v = str.substr( f + 1, str.size() - f - 1 );
 
-	cout << name << endl;
-	cout << v << endl;
-
-	vector< value > result;
-
-	return boost::optional< vector< value > >( std::move( result ) );
+	return value( name, boost::lexical_cast< double >( v ) );
 }
 
-int main()
+std::vector< value > read_file()
 {
 	using namespace std;
 
@@ -42,6 +39,7 @@ int main()
 	cin >> filename;
 
 	ifstream ifs( filename );
+	vector< value > values;
 
 	if( !ifs.fail() )
 	{
@@ -51,22 +49,47 @@ int main()
 		{
 			string input;
 			getline( ifs, input );
-			str += input;
-			str += "\n";
-		}
 
-		//cout << str << endl;
-
-		if( auto values = parse( str ) )
-		{
-			for( auto it = values->begin(); it != values->end(); ++it )
-			{
-				cout << it->name_ << ":" << it->value_ << endl;
-			}
+			boost::algorithm::replace_all( input, " ", "" );
+			
+			if( input.find( "," ) != string::npos )
+				values.push_back( parse( input ) );
 		}
 	}
 	else
 		cerr << "load failed" << endl;
+
+	return std::move( values );
+}
+
+int main()
+{
+	using namespace std;
+	const auto value1 = read_file();
+	const auto value2 = read_file();
+
+	map< string, double > valuemap1;
+
+	for( auto it = value1.begin(); it != value1.end(); ++it )
+	{
+		valuemap1[ it->name_ ] = 0;
+	}
+	for( auto it = value2.begin(); it != value2.end(); ++it )
+	{
+		valuemap1[ it->name_ ] = 0;
+	}
+
+	auto valuemap2 = valuemap1;
+
+	for( auto it = value1.begin(); it != value1.end(); ++it )
+	{
+		valuemap1[ it->name_ ] = it->value_;
+	}
+	for( auto it = value2.begin(); it != value2.end(); ++it )
+	{
+		valuemap2[ it->name_ ] = it->value_;
+	}
+
 
 	return 0;
 }
