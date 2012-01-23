@@ -824,7 +824,7 @@ void kyoto_all()
 		return a.second > b.second;
 	} );
 
-	for( auto it = ktv.begin(); it != ktv.end(); ++it )
+	for( auto it = ktv.rbegin(); it != ktv.rend(); ++it )
 		cout << it->first << " : " << 1.0 * it->second / kcount << endl;
 
 	
@@ -839,7 +839,7 @@ void kyoto_all()
 
 		//json::calc( profiles, * it );
 
-		for( auto it2 = nk.begin(); it2 != nk.end(); ++it2 )
+		for( auto it2 = nk.cbegin(); it2 != nk.cend(); ++it2 )
 		{
 			not_kyoto[ it2->first ] += it2->second;
 			nkcount += it2->second;
@@ -849,7 +849,7 @@ void kyoto_all()
 	cout << endl << endl;
 	cout << "=============NOT KYOTO=======================" << endl;
 	vector< pair< string, int > > nktv;
-	for( auto it = not_kyoto.begin(); it != not_kyoto.end(); ++it )
+	for( auto it = not_kyoto.cbegin(); it != not_kyoto.cend(); ++it )
 	{
 		nktv.push_back( make_pair( it->first, it->second ) );
 	}
@@ -859,7 +859,7 @@ void kyoto_all()
 		return a.second > b.second;
 	} );
 
-	for( auto it = nktv.rbegin(); it != nktv.rend(); ++it )
+	for( auto it = nktv.crbegin(); it != nktv.crend(); ++it )
 		cout << it->first << " : " << 1.0 * it->second / nkcount << endl;
 
 }
