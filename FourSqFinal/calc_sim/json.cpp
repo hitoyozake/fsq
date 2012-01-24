@@ -4,6 +4,7 @@
 #include <map>
 #include <set>
 #include <fstream>
+#include <numeric>
 
 #include <boost/optional.hpp>
 #include <boost/progress.hpp>
@@ -12,6 +13,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
 #include <boost/io/ios_state.hpp>
+
 
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -824,6 +826,14 @@ void kyoto_all()
 		return a.second > b.second;
 	} );
 
+	const auto ktchecksum = accumulate( ktv.begin(), ktv.end(), 0, []( const int v, const pair< string, int > & p )
+	{
+		return v + p.second;
+	} );
+	
+
+	cout << "CHECKIN NUM," << ktchecksum << endl;
+
 	for( auto it = ktv.rbegin(); it != ktv.rend(); ++it )
 		cout << it->first << " : " << 1.0 * it->second / kcount << endl;
 
@@ -858,6 +868,14 @@ void kyoto_all()
 	{
 		return a.second > b.second;
 	} );
+
+	const auto nktchecksum = accumulate( nktv.begin(), nktv.end(), 0, []( const int v, const pair< string, int > & p )
+	{
+		return v + p.second;
+	} );
+	
+
+	cout << "CHECKIN NUM," << nktchecksum << endl;
 
 	for( auto it = nktv.crbegin(); it != nktv.crend(); ++it )
 		cout << it->first << " : " << 1.0 * it->second / nkcount << endl;

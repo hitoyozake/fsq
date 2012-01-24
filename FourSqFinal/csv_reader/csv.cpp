@@ -90,6 +90,18 @@ int main()
 		valuemap2[ it->name_ ] = it->value_;
 	}
 
+	ofstream ofs( "output.csv" );
+
+	ofs << "=================kyoto===================" << endl;
+
+	for( auto it = valuemap1.begin(); it != valuemap1.end(); ++it )
+		ofs << it->first << "," << it->second << endl;
+	ofs << endl << endl;
+	
+	ofs << "=================notkyoto===================" << endl;
+
+	for( auto it = valuemap2.begin(); it != valuemap2.end(); ++it )
+		ofs << it->first << "," << it->second << endl;
 
 	return 0;
 }
