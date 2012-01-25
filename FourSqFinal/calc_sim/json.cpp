@@ -406,7 +406,6 @@ namespace json
 											data.name_ = name.get();
 										}
 
-
 										if( const auto categories = it4->second.get_child_optional( "venue.categories" ) )
 										{
 											for( auto cit = categories->begin(); cit != categories->end(); ++cit )
@@ -420,7 +419,6 @@ namespace json
 												}
 											}
 										}
-										
 
 										if( const auto lat = it4->second.get_optional< double >( "venue.location.lat" ) )
 										{
@@ -796,21 +794,29 @@ void kyoto_all()
 	int kcount = 0;
 	int nkcount = 0;
 
+	//==================================================
+	//最後のbaseを使った、各ユーザごとの属性情報抽出用
+	vector< map< string, int > > kusers;
+
+	//==================================================
+
 	//京都のみなので
 	for( auto it = profiles.begin(); it != profiles.end(); ++it )
 	{
-		auto k = json::kyoto_element( * it, kt );
+		const auto k = json::kyoto_element( * it, kt );
 
 		//地元が
 		//京都だった場合の、京都での統計
 		//京都じゃなかった場合の、京都での統計
 
 		//json::calc( profiles, * it );
-		for( auto it2 = k.begin(); it2 != k.end(); ++it2 )
+		for( auto it2 = k.cbegin(); it2 != k.cend(); ++it2 )
 		{
 			kyoto[ it2->first ] += it2->second;
 			kcount += it2->second;
 		}
+
+		kusers.push_back( move( k ) );
 	}
 
 	cout << "=========KYOTO================" << endl;
@@ -837,12 +843,16 @@ void kyoto_all()
 	for( auto it = ktv.rbegin(); it != ktv.rend(); ++it )
 		cout << it->first << " : " << 1.0 * it->second / kcount << endl;
 
+	//==================================================
+	//最後のbaseを使った、各ユーザごとの属性情報抽出用
+	vector< map< string, int > > nkusers;
+
+	//==================================================
 	
 	//京都のみなので、地元京都じゃない人の京都
 	for( auto it = profiles.begin(); it != profiles.end(); ++it )
 	{
-		auto nk = json::kyoto_not_element( * it, kt );
-
+		const auto nk = json::kyoto_not_element( * it, kt );
 		//地元が
 		//京都だった場合の、京都での統計
 		//京都じゃなかった場合の、京都での統計
@@ -854,6 +864,7 @@ void kyoto_all()
 			not_kyoto[ it2->first ] += it2->second;
 			nkcount += it2->second;
 		}
+		nkusers.push_back( move( nk ) );
 	}
 
 	cout << endl << endl;
@@ -874,12 +885,55 @@ void kyoto_all()
 		return v + p.second;
 	} );
 	
-
 	cout << "CHECKIN NUM," << nktchecksum << endl;
 
 	for( auto it = nktv.crbegin(); it != nktv.crend(); ++it )
 		cout << it->first << " : " << 1.0 * it->second / nkcount << endl;
+	
+	//===================================================
+	//csv用に属性の並び・個数を全て統一したベースmapを作る
+	set< string > base;
 
+	for( auto it = not_kyoto.cbegin(); it != not_kyoto.cend(); ++it )
+		base.insert( it->first );
+
+	for( auto it = kyoto.cbegin(); it != kyoto.cend(); ++it )
+		base.insert( it->first );
+
+	//===========================================
+	//出力
+	string out;
+	for( auto it = base.cbegin(); it != base.cend(); ++it )
+	{
+		out += * it;
+		out += ",";
+		for( auto it2 = kusers.begin(); it2 != kusers.end(); ++it2 )
+		{
+			out += boost::lexical_cast< string >( static_cast< double >( ( * it2 )[ * it ] ) );
+			out += ",";
+		}
+		out.pop_back();
+		out += "\n";
+	}
+
+	cout << out << endl;
+	out.clear();
+
+	for( auto it = base.cbegin(); it != base.cend(); ++it )
+	{
+		out += * it;
+		out += ",";
+		for( auto it2 = nkusers.begin(); it2 != nkusers.end(); ++it2 )
+		{
+			out += boost::lexical_cast< string >( static_cast< double >( ( * it2 )[ * it ] ) );
+			out += ",";
+		}
+		out.pop_back();
+		out += "\n";
+	}
+	
+	cout << out << endl;
+	//===================================================
 }
 
 
