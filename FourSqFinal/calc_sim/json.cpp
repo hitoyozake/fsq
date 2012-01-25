@@ -105,7 +105,6 @@ namespace json
 #pragma region 地元のスポットであるかどうか
 	bool is_local( const personal & person, const std::string & state )
 	{
-
 		if( std::find( person.base_state_.begin(), person.base_state_.end(), state ) \
 			!= person.base_state_.end() )
 			return true;
@@ -235,17 +234,28 @@ namespace json
 	{
 		std::map< std::string, int > elem_count;
 		int count = 0;
+
+		bool f = false;
+
+		for( auto it = person.base_state_.cbegin(); it != person.base_state_.cend(); ++it )
+		{	
+			if( * it == kyoto )
+			{
+				f = true;
+			}
+		}
+
+		if( !f )
+			return std::move( elem_count );
+
 		for( auto it = person.day_.begin(); it != person.day_.end(); ++it )
 		{
 			for( auto it2 = it->data_.begin(); it2 != it->data_.end(); ++it2 )
 			{
-				for( auto local_it = person.base_state_.begin(); local_it != person.base_state_.end(); ++local_it )
+				if( it2->state_name_  == kyoto )
 				{
-					if( * local_it == kyoto )
-					{
-						++elem_count[ it2->elem_name_ ];
-						++count;
-					}
+					++elem_count[ it2->elem_name_ ];
+					++count;
 				}
 			}
 		}
@@ -934,6 +944,92 @@ void kyoto_all()
 	
 	cout << out << endl;
 	//===================================================
+	cout << endl << endl;
+	cout << "=====kyoto=====" << endl;
+	
+	for( auto it = base.cbegin(); it != base.cend(); ++it )
+	{
+		cout << * it << "," << 1.0 * kyoto[ * it ] / kcount << endl;
+	}
+
+	cout << endl << endl;
+	cout << "=====notkyoto=====" << endl;
+	
+	for( auto it = base.cbegin(); it != base.cend(); ++it )
+	{
+		cout << * it << "," << 1.0 * not_kyoto[ * it ] / nkcount << endl;
+	}
+
+	//実際この比率をかけて、分類できるかどうか
+	//people-> kyotoのスポット -> [属性] * 率 のsum
+	// local > leader なら地元
+
+	cout << endl << endl << endl;
+	cout << "==================local check===================" << endl;
+	{
+		map< string, int > local_users;
+		map< string, int > not_local_users;
+
+		int local = 0;
+		int not_local = 0;
+
+		int local_elem_count = 0;
+		int not_local_elem_count = 0;
+
+
+		//それで振り分けたユーザの属性情報比較・・・・有意差なら、地元との差別化完了
+		for( auto it = profiles.begin(); it != profiles.end(); ++it )
+		{
+			it->base_state_.clear();//地元情報は削除
+			const auto nk = json::kyoto_not_element( * it, kt );
+
+			double val1 = 0.0;
+			double val2 = 0.0;
+			for( auto it2 = nk.begin(); it2 != nk.end(); ++it2 )
+			{
+				val1 += 1.0 * kyoto[ it2->first ] * it2->second / kcount;
+				val2 += 1.0 * not_kyoto[ it2->first ] * it2->second / nkcount;
+			}
+
+			if( val1 > val2 )
+			{
+				++local;
+				for( auto it2 = nk.begin(); it2 != nk.end(); ++it2 )
+				{
+					local_elem_count += it2->second;
+					local_users[ it2->first ] += it2->second;
+				}
+				//地元
+			}
+			else
+			{
+				++not_local;
+				//観光客
+				for( auto it2 = nk.begin(); it2 != nk.end(); ++it2 )
+				{
+					not_local_elem_count += it2->second;
+					not_local_users[ it2->first ] += it2->second;
+				}
+			}
+		}
+
+		cout << "==================LOCAL======================" << endl;
+
+		for( auto it = base.cbegin(); it != base.cend(); ++it )
+		{
+			cout << * it << "," << 1.0 * local_users[ * it ] / local_elem_count << endl;
+		}
+
+		cout << endl << endl << endl;
+
+		cout << "==================KKKK======================" << endl;
+
+
+		for( auto it = base.cbegin(); it != base.cend(); ++it )
+		{
+			cout << * it << "," << 1.0 * not_local_users[ * it ] / not_local_elem_count << endl;
+		}
+	}
 }
 
 
